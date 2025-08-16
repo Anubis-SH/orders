@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | نظام متابعة الطلبات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #f3f4f6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
+            <div class="text-center">
+                <div class="text-indigo-600 inline-block p-4 bg-indigo-100 rounded-full">
+                    <i data-feather="check-square" class="w-12 h-12"></i>
+                </div>
+                <h2 class="mt-6 text-4xl font-extrabold text-gray-900">
+                    نظام متابعة الطلبات
+                </h2>
+                <p class="mt-2 text-lg text-gray-600">
+                    أهلاً بك مجدداً! قم بتسجيل الدخول للمتابعة.
+                </p>
+            </div>
+            <div class="bg-white p-8 shadow-2xl rounded-2xl space-y-6">
+                <form id="login-form" class="space-y-6">
+                    <div>
+                        <label for="email-address" class="text-base font-bold text-gray-700">البريد الإلكتروني</label>
+                        <input id="email-address" name="email" type="email" autocomplete="email" required class="mt-2 relative block w-full appearance-none rounded-lg border-2 border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 text-lg" placeholder="example@company.com">
+                    </div>
+                    <div>
+                        <label for="password" class="text-base font-bold text-gray-700">كلمة المرور</label>
+                        <input id="password" name="password" type="password" autocomplete="current-password" required class="mt-2 relative block w-full appearance-none rounded-lg border-2 border-gray-300 px-4 py-3 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 text-lg" placeholder="••••••••">
+                    </div>
+
+                    <div id="error-message" class="text-red-600 text-base font-bold text-center hidden"></div>
+
+                    <div>
+                        <button type="submit" class="group relative flex w-full justify-center rounded-lg border border-transparent bg-indigo-600 py-3 px-4 text-lg font-bold text-white shadow-lg shadow-indigo-500/40 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all">
+                            تسجيل الدخول
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZ41NK4xWlrCjah1O9XP-1jp2bkR8nNuc",
+            authDomain: "arabia-orders.firebaseapp.com",
+            projectId: "arabia-orders",
+            storageBucket: "arabia-orders.appspot.com",
+            messagingSenderId: "1098475426096",
+            appId: "1:1098475426096:web:25bc7f0afc82d247c3b8f5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        feather.replace();
+
+        const loginForm = document.getElementById('login-form');
+        const errorMessage = document.getElementById('error-message');
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const email = loginForm.email.value;
+            const password = loginForm.password.value;
+            errorMessage.classList.add('hidden');
+            errorMessage.textContent = '';
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    window.location.href = 'dashboard.html';
+                })
+                .catch(() => {
+                    errorMessage.textContent = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+                    errorMessage.classList.remove('hidden');
+                });
+        });
+    </script>
+</body>
+</html>
