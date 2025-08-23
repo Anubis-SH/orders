@@ -9,36 +9,56 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Cairo', sans-serif;
             scroll-behavior: smooth;
             background-color: #f8fafc; /* slate-50 */
         }
-        .btn-primary {
-            @apply inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-base font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-700 hover:shadow-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
+        
+        /* UPDATED: Polished Button Styles */
+        .btn-primary { @apply inline-flex items-center justify-center gap-2.5 rounded-xl bg-indigo-600 px-5 py-3 text-base font-bold text-white shadow-lg shadow-indigo-500/30 transition-all hover:bg-indigo-700 hover:shadow-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transform hover:-translate-y-0.5; }
+        .btn-secondary { @apply inline-flex items-center justify-center gap-2.5 rounded-xl border-2 border-slate-300 bg-white px-5 py-3 text-base font-bold text-slate-800 shadow-sm transition-all hover:bg-slate-100 hover:border-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transform hover:-translate-y-0.5; }
+        .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-base font-bold text-white shadow-lg shadow-red-500/30 transition-all hover:bg-red-700 hover:shadow-red-500/50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2; }
+        
+        /* NEW: Professional Tab Styles */
+        .tab-container {
+            background-color: #eef2ff; /* indigo-100 */
+            border-radius: 1rem;
+            padding: 0.5rem;
+            display: inline-flex;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
-        .btn-secondary {
-            @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-base font-bold text-slate-800 shadow-sm transition-all hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2;
-        }
-        .btn-danger {
-            @apply inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-base font-bold text-white shadow-lg shadow-red-500/30 transition-all hover:bg-red-700 hover:shadow-red-500/50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+        .tab-btn {
+            font-size: 1.125rem;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.875rem; /* 14px */
+            transition: all 0.3s ease-in-out;
+            border: 2px solid transparent;
+            cursor: pointer;
         }
         .tab-active {
-            @apply border-indigo-600 text-indigo-600;
+            background-color: #ffffff;
+            color: #4f46e5; /* indigo-600 */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .tab-inactive {
-            @apply border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300;
+            background-color: transparent;
+            color: #64748b; /* slate-500 */
         }
-        .timeline-details {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-in-out;
+        .tab-inactive:hover {
+            color: #3730a3; /* indigo-800 */
         }
-        /* Modal Animation */
-        .modal-content-transition {
-             transition: all 0.3s ease-out;
-        }
+        
+        .modal-content-transition { transition: all 0.3s ease-out; }
+        .autocomplete-suggestions { position: absolute; border: 1px solid #e2e8f0; background-color: white; z-index: 1000; max-height: 150px; overflow-y: auto; width: 100%; border-radius: 0 0 0.5rem 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .autocomplete-suggestion { padding: 0.75rem 1rem; cursor: pointer; }
+        .autocomplete-suggestion:hover { background-color: #f1f5f9; }
+        .autocomplete-suggestion.active { background-color: #eef2ff; color: #4f46e5; }
+
+        .z-60 { z-index: 60; }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -47,46 +67,78 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-20">
                 <div class="flex items-center gap-3">
-                    <div class="text-indigo-600">
-                        <i data-feather="check-square" class="w-8 h-8"></i>
-                    </div>
+                    <div class="text-indigo-600"><i data-feather="check-square" class="w-8 h-8"></i></div>
                     <h1 class="text-2xl font-extrabold text-slate-800">لوحة التحكم</h1>
                 </div>
                 <div class="flex items-center gap-4">
                     <span id="user-email" class="text-base text-slate-600 font-semibold hidden sm:block"></span>
-                    <button id="logout-btn" title="تسجيل الخروج" class="btn-secondary !px-3 !py-2">
-                        <i data-feather="log-out" class="w-5 h-5"></i>
-                    </button>
+                    <button id="logout-btn" title="تسجيل الخروج" class="btn-secondary !px-3 !py-2"><i data-feather="log-out" class="w-5 h-5"></i></button>
                 </div>
             </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div class="px-4 sm:px-0">
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-3xl font-extrabold text-slate-900">متابعة الطلبات</h2>
-                <button id="add-order-btn" class="btn-primary hidden w-full sm:w-auto">
-                    <i data-feather="plus-circle" class="w-6 h-6"></i>
-                    <span>إضافة طلب جديد</span>
+        
+        <div class="px-4 sm:px-0 mb-8 flex flex-col md:flex-row justify-between items-center gap-y-4">
+            <div>
+                <h2 class="text-3xl font-extrabold text-slate-900 whitespace-nowrap">متابعة الطلبات</h2>
+            </div>
+        
+            <div>
+                <button id="export-excel-btn" class="inline-flex items-center gap-2 text-slate-600 font-semibold hover:text-indigo-600 transition-colors">
+                    <i data-feather="download" class="w-5 h-5"></i>
+                    <span>تصدير Excel</span>
                 </button>
             </div>
+        </div>
 
-            <div class="border-b border-slate-200 mb-6">
-                <nav class="-mb-px flex gap-6" aria-label="Tabs">
-                    <button id="active-tab" class="whitespace-nowrap py-4 px-1 border-b-2 font-bold text-lg tab-active">الطلبات الحالية</button>
-                    <button id="archive-tab" class="whitespace-nowrap py-4 px-1 border-b-2 font-bold text-lg tab-inactive">سجل الطلبات</button>
+
+        <div class="px-4 sm:px-0 mb-10">
+            <h3 class="text-2xl font-bold text-slate-800 mb-4">نظرة عامة</h3>
+            <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-5 animate-pulse"><div class="h-12 w-12 bg-slate-200 rounded-full"></div><div class="flex-1 space-y-3"><div class="h-4 bg-slate-200 rounded w-3/4"></div><div class="h-6 bg-slate-200 rounded w-1/2"></div></div></div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-5 animate-pulse"><div class="h-12 w-12 bg-slate-200 rounded-full"></div><div class="flex-1 space-y-3"><div class="h-4 bg-slate-200 rounded w-3/4"></div><div class="h-6 bg-slate-200 rounded w-1/2"></div></div></div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-5 animate-pulse"><div class="h-12 w-12 bg-slate-200 rounded-full"></div><div class="flex-1 space-y-3"><div class="h-4 bg-slate-200 rounded w-3/4"></div><div class="h-6 bg-slate-200 rounded w-1/2"></div></div></div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-5 animate-pulse"><div class="h-12 w-12 bg-slate-200 rounded-full"></div><div class="flex-1 space-y-3"><div class="h-4 bg-slate-200 rounded w-3/4"></div><div class="h-6 bg-slate-200 rounded w-1/2"></div></div></div>
+            </div>
+        </div>
+
+        <div class="px-4 sm:px-0">
+            <div class="mb-6">
+                <nav class="tab-container" aria-label="Tabs">
+                    <button id="active-tab" class="tab-btn tab-active">الطلبات الحالية</button>
+                    <button id="archive-tab" class="tab-btn tab-inactive">الطلبات المكتملة</button>
+                    <button id="stats-tab" class="tab-btn tab-inactive">الإحصائيات</button>
                 </nav>
             </div>
             
             <div id="active-orders-content">
-                 <div class="relative mb-6">
-                    <input type="text" id="search-active-input" placeholder="ابحث بكود الطلب, اسم العميل أو المنتج..." class="w-full pl-12 pr-4 py-3 text-lg border-2 border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i data-feather="search" class="w-6 h-6 text-slate-400"></i>
+                <div class="flex flex-col md:flex-row gap-4 mb-6 justify-between items-center">
+                    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto flex-grow">
+                        <div class="relative flex-grow">
+                            <input type="text" id="search-active-input" placeholder="اكتب للبحث..." class="w-full pl-12 pr-4 py-3 text-lg border-2 border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-feather="search" class="w-6 h-6 text-slate-400"></i></div>
+                        </div>
+                        <select id="search-active-filter" class="w-full sm:w-48 border-2 border-slate-300 rounded-lg text-lg px-3 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="all">بحث في الكل</option>
+                            <option value="orderCode">كود الطلب</option>
+                            <option value="customerName">اسم العميل</option>
+                            <option value="productName">اسم المنتج</option>
+                            <option value="repName">اسم المندوب</option>
+                        </select>
+                    </div>
+                    <div class="w-full md:w-auto">
+                        <button id="add-order-btn" class="hidden group w-full md:w-auto flex items-center justify-center rounded-full bg-sky-500 text-white text-base font-bold shadow-lg transition-all duration-300 hover:bg-sky-600 transform hover:-translate-y-0.5 overflow-hidden">
+                            <span class="px-6 py-3">إضافة طلب جديد</span>
+                            <span class="pl-3 pr-4 py-3 bg-sky-600 group-hover:bg-sky-700 transition-colors">
+                                <i data-feather="chevron-right" class="w-6 h-6"></i>
+                            </span>
+                        </button>
                     </div>
                 </div>
-                <div id="orders-list" class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"></div>
+
+                <div id="orders-list" class="space-y-4"></div>
                 <div id="no-orders-message" class="hidden text-center py-16 bg-white rounded-xl shadow-md">
                     <i data-feather="folder" class="w-16 h-16 mx-auto text-slate-400"></i>
                     <p class="mt-4 text-xl font-bold text-slate-700">لا توجد طلبات حالية لعرضها.</p>
@@ -94,11 +146,18 @@
             </div>
 
             <div id="archived-orders-content" class="hidden">
-                <div class="relative mb-6">
-                    <input type="text" id="search-archive-input" placeholder="ابحث بكود الطلب, اسم العميل أو المنتج..." class="w-full pl-12 pr-4 py-3 text-lg border-2 border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i data-feather="search" class="w-6 h-6 text-slate-400"></i>
+                <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                    <div class="relative flex-grow">
+                        <input type="text" id="search-archive-input" placeholder="اكتب للبحث..." class="w-full pl-12 pr-4 py-3 text-lg border-2 border-slate-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><i data-feather="search" class="w-6 h-6 text-slate-400"></i></div>
                     </div>
+                    <select id="search-archive-filter" class="w-full sm:w-48 border-2 border-slate-300 rounded-lg text-lg px-3 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="all">بحث في الكل</option>
+                        <option value="orderCode">كود الطلب</option>
+                        <option value="customerName">اسم العميل</option>
+                        <option value="productName">اسم المنتج</option>
+                        <option value="repName">اسم المندوب</option>
+                    </select>
                 </div>
                 <div id="archived-orders-list" class="space-y-3"></div>
                 <div id="no-archived-orders-message" class="hidden text-center py-16 bg-white rounded-xl shadow-md">
@@ -106,39 +165,68 @@
                     <p class="mt-4 text-xl font-bold text-slate-700">سجل الطلبات فارغ.</p>
                 </div>
             </div>
+
+            <div id="stats-content" class="hidden space-y-8">
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-extrabold text-slate-900 mb-4">تحليل الأداء السنوي</h3>
+                    <div class="h-96">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-extrabold text-slate-900 mb-4">مقارنة الأداء الشهري</h3>
+                    <div id="monthly-comparison" class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg">
+                    <h3 class="text-2xl font-extrabold text-slate-900 mb-4">أداء المناديب (الشهر الحالي)</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-center" id="reps-performance-table">
+                            <thead class="bg-slate-100">
+                                <tr>
+                                    <th class="p-4 font-bold text-slate-700">اسم المندوب</th>
+                                    <th class="p-4 font-bold text-slate-700">الطلبات الحالية</th>
+                                    <th class="p-4 font-bold text-slate-700">الطلبات المكتملة</th>
+                                    <th class="p-4 font-bold text-slate-700">الإجمالي</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
-    <div id="order-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900 bg-opacity-70 transition-opacity"> <div class="flex items-center justify-center min-h-screen p-4"> <div class="relative bg-white rounded-2xl shadow-2xl p-8 m-4 max-w-lg w-full transform modal-content-transition scale-95 opacity-0" id="modal-content"> <h3 class="text-2xl font-extrabold mb-6 text-center" id="modal-title">إضافة طلب جديد</h3> <form id="order-form" class="space-y-6"> <div><label class="block text-base font-bold text-slate-700 mb-2">كود الطلب</label><input type="text" value="يتم إنشاؤه تلقائياً" disabled class="mt-1 block w-full rounded-lg border-slate-300 bg-slate-100 text-slate-500 shadow-sm text-lg p-3 cursor-not-allowed"></div><div> <label for="customer-name" class="block text-base font-bold text-slate-700 mb-2">اسم العميل</label> <input type="text" id="customer-name" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3"> </div> <div> <label for="product-name" class="block text-base font-bold text-slate-700 mb-2">اسم المنتج</label> <input type="text" id="product-name" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3"> </div> <div> <label for="quantity" class="block text-base font-bold text-slate-700 mb-2">الكمية المطلوبة</label> <input type="number" id="quantity" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3"> </div> <div> <label for="order-type" class="block text-base font-bold text-slate-700 mb-2">نوع الطلب</label> <select id="order-type" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3"> <option value="" disabled selected>اختر نوع الطلب</option> <option value="flexo">فليكسو</option> <option value="offset">أوفست</option> </select> </div> <div id="flexo-options" class="hidden pt-2"> <label class="flex items-center gap-3 cursor-pointer"> <input type="checkbox" id="requires-form" class="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"> <span class="text-base font-semibold text-slate-800">هذا الطلب يتطلب فورمة</span> </label> </div> <div class="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3"> <button type="button" id="cancel-btn" class="btn-secondary w-full sm:w-auto">إلغاء</button> <button type="submit" class="btn-primary w-full sm:w-auto">حفظ الطلب</button> </div> </form> </div> </div> </div>
+    <div id="order-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900 bg-opacity-70 transition-opacity"> <div class="flex items-center justify-center min-h-screen p-4"> <div class="relative bg-white rounded-2xl shadow-2xl p-8 m-4 max-w-lg w-full transform modal-content-transition scale-95 opacity-0" id="modal-content"> <h3 class="text-2xl font-extrabold mb-6 text-center" id="modal-title">إضافة طلب جديد</h3> <form id="order-form" class="space-y-6"> <div><label class="block text-base font-bold text-slate-700 mb-2">كود الطلب</label><input type="text" value="يتم إنشاؤه تلقائياً" disabled class="mt-1 block w-full rounded-lg border-slate-300 bg-slate-100 text-slate-500 shadow-sm text-lg p-3 cursor-not-allowed"></div> <div class="relative"> <label for="rep-name" class="block text-base font-bold text-slate-700 mb-2">اسم المندوب</label> <input type="text" id="rep-name" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3" autocomplete="off"> <div id="rep-suggestions" class="autocomplete-suggestions hidden"></div> </div> <div class="relative"> <label for="customer-name" class="block text-base font-bold text-slate-700 mb-2">اسم العميل</label> <input type="text" id="customer-name" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3" autocomplete="off"> <div id="customer-suggestions" class="autocomplete-suggestions hidden"></div> </div> <div> <label for="product-name" class="block text-base font-bold text-slate-700 mb-2">اسم المنتج</label> <input type="text" id="product-name" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3"> </div> <div> <label for="quantity" class="block text-base font-bold text-slate-700 mb-2">الكمية المطلوبة</label> <input type="number" id="quantity" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3"> </div> <div> <label for="order-type" class="block text-base font-bold text-slate-700 mb-2">نوع الطلب</label> <select id="order-type" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3"> <option value="" disabled selected>اختر نوع الطلب</option> <option value="flexo">فليكسو</option> <option value="offset">أوفست</option> </select> </div> <div id="flexo-options" class="hidden pt-2"> <label class="flex items-center gap-3 cursor-pointer"> <input type="checkbox" id="requires-form" class="h-5 w-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"> <span class="text-base font-semibold text-slate-800">هذا الطلب يتطلب فورمة</span> </label> </div> <div class="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3"> <button type="button" id="cancel-btn" class="btn-secondary w-full sm:w-auto">إلغاء</button> <button type="submit" class="btn-primary w-full sm:w-auto">حفظ الطلب</button> </div> </form> </div> </div> </div>
     
-    <div id="notes-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900 bg-opacity-70"> <div class="flex items-center justify-center min-h-screen p-4"> <div class="relative bg-white rounded-2xl shadow-2xl p-8 m-4 max-w-lg w-full transform modal-content-transition scale-95 opacity-0" id="notes-modal-content"> <h3 class="text-2xl font-extrabold mb-6 text-center" id="notes-modal-title">إضافة ملاحظات</h3> <form id="notes-form"> <input type="hidden" id="notes-order-id"> <input type="hidden" id="notes-stage-id"> <div> <label for="stage-notes" class="block text-base font-bold text-slate-700 mb-2">الملاحظات</label> <textarea id="stage-notes" rows="5" class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3"></textarea> </div> <div class="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3"> <button type="button" id="cancel-notes-btn" class="btn-secondary w-full sm:w-auto">إلغاء</button> <button type="submit" class="btn-primary w-full sm:w-auto">حفظ الملاحظات</button> </div> </form> </div> </div> </div>
+    <div id="notes-modal" class="hidden fixed inset-0 z-60 overflow-y-auto bg-slate-900 bg-opacity-70"> <div class="flex items-center justify-center min-h-screen p-4"> <div class="relative bg-white rounded-2xl shadow-2xl p-8 m-4 max-w-2xl w-full transform modal-content-transition scale-95 opacity-0" id="notes-modal-content"> <h3 class="text-2xl font-extrabold mb-4 pb-4 border-b border-slate-200" id="notes-modal-title">الملاحظات</h3> <div id="notes-list" class="space-y-3 max-h-60 overflow-y-auto mb-4 pr-2"></div> <form id="notes-form"> <input type="hidden" id="notes-order-id"> <input type="hidden" id="notes-stage-id"> <div> <label for="new-note" class="block text-base font-bold text-slate-700 mb-2">إضافة ملاحظة جديدة</label> <textarea id="new-note" rows="3" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-lg p-3"></textarea> </div> <div class="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3"> <button type="button" id="cancel-notes-btn" class="btn-secondary w-full sm:w-auto">إغلاق</button> <button type="submit" class="btn-primary w-full sm:w-auto">إضافة</button> </div> </form> </div> </div> </div>
     
-    <div id="stop-order-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900 bg-opacity-70"> <div class="flex items-center justify-center min-h-screen p-4"> <div class="relative bg-white rounded-2xl shadow-2xl p-8 m-4 max-w-lg w-full transform modal-content-transition scale-95 opacity-0" id="stop-order-modal-content"> <h3 class="text-2xl font-extrabold mb-6 text-center text-red-600">إيقاف الطلب</h3> <form id="stop-order-form"> <input type="hidden" id="stop-order-id"> <div> <label for="stop-reason" class="block text-base font-bold text-slate-700 mb-2">سبب الإيقاف (إجباري)</label> <textarea id="stop-reason" rows="5" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-lg p-3"></textarea> </div> <div class="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3"> <button type="button" id="cancel-stop-btn" class="btn-secondary w-full sm:w-auto">إلغاء</button> <button type="submit" class="btn-danger w-full sm:w-auto">تأكيد الإيقاف</button> </div> </form> </div> </div> </div>
-
-    <div id="archive-detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900 bg-opacity-70">
+    <div id="stop-order-modal" class="hidden fixed inset-0 z-60 overflow-y-auto bg-slate-900 bg-opacity-70"> <div class="flex items-center justify-center min-h-screen p-4"> <div class="relative bg-white rounded-2xl shadow-2xl p-8 m-4 max-w-lg w-full transform modal-content-transition scale-95 opacity-0" id="stop-order-modal-content"> <h3 class="text-2xl font-extrabold mb-6 text-center text-red-600">إيقاف الطلب</h3> <form id="stop-order-form"> <input type="hidden" id="stop-order-id"> <div> <label for="stop-reason" class="block text-base font-bold text-slate-700 mb-2">سبب الإيقاف (إجباري)</label> <textarea id="stop-reason" rows="5" required class="mt-1 block w-full rounded-lg border-slate-300 shadow-sm focus:border-red-500 focus:ring-red-500 text-lg p-3"></textarea> </div> <div class="pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3"> <button type="button" id="cancel-stop-btn" class="btn-secondary w-full sm:w-auto">إلغاء</button> <button type="submit" class="btn-danger w-full sm:w-auto">تأكيد الإيقاف</button> </div> </form> </div> </div> </div>
+    
+    <div id="detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900 bg-opacity-70">
         <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="relative bg-white rounded-2xl shadow-2xl p-8 m-4 max-w-2xl w-full transform modal-content-transition scale-95 opacity-0" id="archive-detail-modal-content">
-                <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
-                    <h3 class="text-2xl font-extrabold text-slate-900" id="archive-modal-title">تفاصيل الطلب</h3>
-                    <button id="close-archive-modal-btn" class="text-slate-500 hover:text-slate-800">
-                         <i data-feather="x" class="w-8 h-8"></i>
-                    </button>
-                </div>
-                <div id="archive-modal-body" class="max-h-[70vh] overflow-y-auto pr-2 space-y-4">
+            <div class="relative bg-white rounded-2xl shadow-2xl p-8 m-4 max-w-3xl w-full transform modal-content-transition scale-95 opacity-0" id="detail-modal-content">
+                <div class="flex justify-between items-start mb-6 pb-4 border-b border-slate-200 gap-4">
+                    <div>
+                        <h3 class="text-2xl font-extrabold text-slate-900" id="detail-modal-title">تفاصيل الطلب</h3>
                     </div>
+                    <button id="close-detail-modal-btn" class="text-slate-500 hover:text-slate-800 flex-shrink-0"><i data-feather="x" class="w-8 h-8"></i></button>
+                </div>
+                <div id="detail-modal-body" class="max-h-[70vh] overflow-y-auto pr-2 space-y-4"></div>
             </div>
         </div>
     </div>
 
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, addDoc, onSnapshot, query, where, updateDoc, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, addDoc, onSnapshot, query, where, updateDoc, serverTimestamp, runTransaction, getDocs, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- FIREBASE CONFIG ---
         const firebaseConfig = {
-            apiKey: "AIzaSyBZ41NK4xWlrCjah1O9XP-1jp2bkR8nNuc", // Replace with your actual config
+            apiKey: "AIzaSyBZ41NK4xWlrCjah1O9XP-1jp2bkR8nNuc",
             authDomain: "arabia-orders.firebaseapp.com",
             projectId: "arabia-orders",
             storageBucket: "arabia-orders.appspot.com",
@@ -152,361 +240,520 @@
 
         // --- STAGES DEFINITION ---
         const STAGES = {
-            flexo: [ { id: 'supply_order', name: 'أمر توريد', dependencies: [] }, { id: 'design', name: 'التصميم والاعتماد', dependencies: [] }, { id: 'materials', name: 'توفير الخامات', dependencies: [] }, { id: 'form', name: 'توفير فورمة', dependencies: [], optional: true }, { id: 'production_line', name: 'خط الإنتاج', dependencies: ['materials'] }, { id: 'sareel', name: 'توفير السريل', dependencies: ['design'] }, { id: 'printing', name: 'الطباعة', dependencies: ['production_line', 'sareel'] }, { id: 'cutting', name: 'التكسير / التفتيح', dependencies: ['printing'] }, { id: 'gluing', name: 'اللصق / الدبوس', dependencies: ['cutting'] }, { id: 'packaging', name: 'شنبر / استرتش', dependencies: ['gluing'] }, { id: 'loading', name: 'التحميل والتسليم', dependencies: ['packaging'] }, ],
-            offset: [ { id: 'supply_order', name: 'أمر توريد', dependencies: [] }, { id: 'form', name: 'توفير الفورمة', dependencies: [] }, { id: 'design', name: 'التصميم', dependencies: ['form'] }, { id: 'zinkat', name: 'توفير الزنكات', dependencies: ['design'] }, { id: 'materials', name: 'توفير الخامات', dependencies: [] }, { id: 'sheeter', name: 'الشيتر', dependencies: ['materials'] }, { id: 'printing', name: 'الطباعة', dependencies: ['sheeter', 'zinkat'] }, { id: 'coating', name: 'سلوفان / UV', dependencies: ['printing'] }, { id: 'merging', name: 'الدمج', dependencies: ['coating'] }, { id: 'cutting', name: 'التكسير', dependencies: ['merging'] }, { id: 'gluing', name: 'اللصق / الدبوس', dependencies: ['cutting'] }, { id: 'packaging', name: 'شنبر / استرتش', dependencies: ['gluing'] }, { id: 'loading', name: 'التحميل والتسليم', dependencies: ['packaging'] }, ]
+            flexo: [ { id: 'supply_order', name: 'أمر توريد', dependencies: [] }, { id: 'design', name: 'التصميم والاعتماد', dependencies: [] }, { id: 'materials', name: 'الخامات', dependencies: [], requestable: true }, { id: 'form', name: 'الفورمة', dependencies: [], optional: true, requestable: true }, { id: 'production_line', name: 'خط الإنتاج', dependencies: ['materials'] }, { id: 'sareel', name: 'السريل', dependencies: ['design'], requestable: true }, { id: 'printing', name: 'الطباعة', dependencies: ['production_line', 'sareel'] }, { id: 'cutting', name: 'التكسير / التفتيح', dependencies: ['printing'] }, { id: 'gluing', name: 'اللصق / الدبوس', dependencies: ['cutting'] }, { id: 'packaging', name: 'شنبر / استرتش', dependencies: ['gluing'] }, { id: 'loading', name: 'التحميل', dependencies: ['packaging'] }, { id: 'delivery', name: 'التسليم', dependencies: ['loading'] }, ],
+            offset: [ { id: 'supply_order', name: 'أمر توريد', dependencies: [] }, { id: 'form', name: 'الفورمة', dependencies: [], requestable: true }, { id: 'design', name: 'التصميم', dependencies: ['form'] }, { id: 'zinkat', name: 'الزنكات', dependencies: ['design'], requestable: true }, { id: 'materials', name: 'الخامات', dependencies: [], requestable: true }, { id: 'sheeter', name: 'الشيتر', dependencies: ['materials'] }, { id: 'printing', name: 'الطباعة', dependencies: ['sheeter', 'zinkat'] }, { id: 'coating', name: 'سلوفان / UV', dependencies: ['printing'] }, { id: 'merging', name: 'الدمج', dependencies: ['coating'] }, { id: 'cutting', name: 'التكسير', dependencies: ['merging'] }, { id: 'gluing', name: 'اللصق / الدبوس', dependencies: ['cutting'] }, { id: 'packaging', name: 'شنبر / استرتش', dependencies: ['gluing'] }, { id: 'loading', name: 'التحميل', dependencies: ['packaging'] }, { id: 'delivery', name: 'التسليم', dependencies: ['loading'] }, ]
         };
 
         // --- UI ELEMENTS ---
-        const userEmailEl = document.getElementById('user-email');
-        const logoutBtn = document.getElementById('logout-btn');
-        const addOrderBtn = document.getElementById('add-order-btn');
-        const ordersListEl = document.getElementById('orders-list');
-        const noOrdersMessage = document.getElementById('no-orders-message');
-        const archivedOrdersListEl = document.getElementById('archived-orders-list');
-        const noArchivedOrdersMessage = document.getElementById('no-archived-orders-message');
-        const activeTab = document.getElementById('active-tab');
-        const archiveTab = document.getElementById('archive-tab');
-        const activeContent = document.getElementById('active-orders-content');
-        const archivedContent = document.getElementById('archived-orders-content');
-        const searchActiveInput = document.getElementById('search-active-input');
-        const searchArchiveInput = document.getElementById('search-archive-input');
+        const userEmailEl = document.getElementById('user-email'); const logoutBtn = document.getElementById('logout-btn'); const addOrderBtn = document.getElementById('add-order-btn'); const exportExcelBtn = document.getElementById('export-excel-btn'); const ordersListEl = document.getElementById('orders-list'); const noOrdersMessage = document.getElementById('no-orders-message'); const archivedOrdersListEl = document.getElementById('archived-orders-list'); const noArchivedOrdersMessage = document.getElementById('no-archived-orders-message'); const activeTab = document.getElementById('active-tab'); const archiveTab = document.getElementById('archive-tab'); const statsTab = document.getElementById('stats-tab'); const activeContent = document.getElementById('active-orders-content'); const archivedContent = document.getElementById('archived-orders-content'); const statsContent = document.getElementById('stats-content'); const searchActiveInput = document.getElementById('search-active-input'); const searchActiveFilter = document.getElementById('search-active-filter'); const searchArchiveInput = document.getElementById('search-archive-input'); const searchArchiveFilter = document.getElementById('search-archive-filter'); const orderModal = document.getElementById('order-modal'); const modalContent = document.getElementById('modal-content'); const orderForm = document.getElementById('order-form'); const cancelBtn = document.getElementById('cancel-btn'); const flexoOptions = document.getElementById('flexo-options'); const orderTypeSelect = document.getElementById('order-type'); const notesModal = document.getElementById('notes-modal'); const notesModalContent = document.getElementById('notes-modal-content'); const notesForm = document.getElementById('notes-form'); const cancelNotesBtn = document.getElementById('cancel-notes-btn'); const notesListEl = document.getElementById('notes-list'); const stopOrderModal = document.getElementById('stop-order-modal'); const stopOrderModalContent = document.getElementById('stop-order-modal-content'); const stopOrderForm = document.getElementById('stop-order-form'); const cancelStopBtn = document.getElementById('cancel-stop-btn'); const detailModal = document.getElementById('detail-modal'); const detailModalContent = document.getElementById('detail-modal-content'); const closeDetailModalBtn = document.getElementById('close-detail-modal-btn'); const detailModalBody = document.getElementById('detail-modal-body'); const detailModalTitle = document.getElementById('detail-modal-title'); const repNameInput = document.getElementById('rep-name'); const repSuggestionsEl = document.getElementById('rep-suggestions'); const customerNameInput = document.getElementById('customer-name'); const customerSuggestionsEl = document.getElementById('customer-suggestions'); const mainContainer = document.querySelector('main'); const statsContainer = document.getElementById('stats-container');
         
-        // Modals
-        const orderModal = document.getElementById('order-modal'); const modalContent = document.getElementById('modal-content'); const orderForm = document.getElementById('order-form'); const cancelBtn = document.getElementById('cancel-btn'); const flexoOptions = document.getElementById('flexo-options'); const orderTypeSelect = document.getElementById('order-type'); const notesModal = document.getElementById('notes-modal'); const notesModalContent = document.getElementById('notes-modal-content'); const notesForm = document.getElementById('notes-form'); const cancelNotesBtn = document.getElementById('cancel-notes-btn'); const stopOrderModal = document.getElementById('stop-order-modal'); const stopOrderModalContent = document.getElementById('stop-order-modal-content'); const stopOrderForm = document.getElementById('stop-order-form'); const cancelStopBtn = document.getElementById('cancel-stop-btn');
-        const archiveDetailModal = document.getElementById('archive-detail-modal'); const archiveDetailModalContent = document.getElementById('archive-detail-modal-content'); const closeArchiveModalBtn = document.getElementById('close-archive-modal-btn'); const archiveModalBody = document.getElementById('archive-modal-body'); const archiveModalTitle = document.getElementById('archive-modal-title');
-
-        const mainContainer = document.querySelector('main');
-
-        let currentUser = null;
-        let userRole = null;
-        let unsubscribeActive = null;
-        let unsubscribeArchived = null;
+        let currentUser = null; 
+        let userRole = null; 
+        let unsubscribeOrders = null; 
+        let allOrders = [];
         let allActiveOrders = [];
         let allArchivedOrders = [];
+        let performanceChartInstance = null;
 
-        // --- AUTH & INIT ---
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
                 userEmailEl.textContent = user.email;
                 const userDocRef = doc(db, "users", user.uid);
                 const userDocSnap = await getDoc(userDocRef);
-
                 if (userDocSnap.exists()) {
                     userRole = userDocSnap.data().role;
                     setupUIForRole(userRole);
-                    listenForActiveOrders(userRole, user.uid);
-                    listenForArchivedOrders(userRole, user.uid);
+                    listenToOrders(userRole, user.uid);
                 } else { handleLogout(); }
             } else { window.location.href = 'login.html'; }
             feather.replace();
         });
 
-        function setupUIForRole(role) {
-            if (role === 'rep') addOrderBtn.classList.remove('hidden');
+        function setupUIForRole(role) { if (role === 'rep') addOrderBtn.classList.remove('hidden'); }
+        
+        function listenToOrders(role, uid) {
+            if (unsubscribeOrders) unsubscribeOrders();
+            let q = query(collection(db, "orders"));
+            if (role === 'rep') q = query(q, where("createdBy", "==", uid));
+            
+            unsubscribeOrders = onSnapshot(q, (snapshot) => {
+                allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                allActiveOrders = allOrders.filter(o => o.status === 'active');
+                allArchivedOrders = allOrders.filter(o => ["completed", "stopped"].includes(o.status));
+
+                renderFilteredActiveOrders();
+                renderFilteredArchivedOrders();
+                renderStatistics(allActiveOrders, allArchivedOrders);
+                renderAdvancedStatistics(allActiveOrders, allArchivedOrders);
+                renderPerformanceChart(allOrders);
+            }, (error) => { console.error("Error listening to orders:", error); });
         }
         
-        // --- DATA HANDLING ---
-        function listenForActiveOrders(role, uid) {
-            if (unsubscribeActive) unsubscribeActive();
-            let q = query(collection(db, "orders"), where("status", "==", "active"));
-            if (role === 'rep') q = query(q, where("createdBy", "==", uid));
-            unsubscribeActive = onSnapshot(q, (snapshot) => {
-                allActiveOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderActiveOrders(allActiveOrders);
-                noOrdersMessage.classList.toggle('hidden', !snapshot.empty);
-            });
-        }
-
-        function listenForArchivedOrders(role, uid) {
-            if (unsubscribeArchived) unsubscribeArchived();
-            let q = query(collection(db, "orders"), where("status", "in", ["completed", "stopped"]));
-            if (role === 'rep') q = query(q, where("createdBy", "==", uid));
-            unsubscribeArchived = onSnapshot(q, (snapshot) => {
-                allArchivedOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderArchivedOrders(allArchivedOrders);
-                noArchivedOrdersMessage.classList.toggle('hidden', !snapshot.empty);
-            });
-        }
-
-        // --- RENDERING ---
-        function renderActiveOrders(orders) {
-            ordersListEl.innerHTML = '';
+        function renderOrdersList(element, orders) {
+            element.innerHTML = '';
+            orders.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
             orders.forEach(order => {
                 const completedStagesCount = (order.stages || []).filter(s => s.status === 'completed').length;
                 const totalStages = (order.stages || []).length;
                 const progress = totalStages > 0 ? (completedStagesCount / totalStages) * 100 : 0;
                 
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 flex flex-col';
+                let statusBadge = '';
+                if (order.status === 'stopped') { statusBadge = `<span class="text-sm font-bold px-3 py-1 rounded-full bg-red-100 text-red-800">متوقف</span>`; } 
+                else if (order.status === 'completed') { statusBadge = `<span class="text-sm font-bold px-3 py-1 rounded-full bg-green-100 text-green-800">مكتمل</span>`; } 
+                else { statusBadge = `<span class="text-sm font-bold px-3 py-1 rounded-full bg-blue-100 text-blue-800">حالي</span>`; }
                 
-                card.innerHTML = `
-                    <div class="flex-grow">
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-extrabold text-2xl text-slate-900">${order.productName}</h3>
-                            <span class="text-lg font-bold text-indigo-600">#${order.orderCode || 'N/A'}</span>
-                        </div>
-                        <p class="text-base text-slate-600 mt-2 font-semibold">للعميل: ${order.customerName}</p>
-                        <div class="mt-6">
-                            <div class="flex justify-between mb-2">
-                                <span class="text-base font-bold text-slate-700">التقدم</span>
-                                <span class="text-base font-bold text-indigo-700">${Math.round(progress)}%</span>
-                            </div>
-                            <div class="w-full bg-slate-200 rounded-full h-3">
-                                <div class="bg-indigo-600 h-3 rounded-full transition-all duration-500" style="width: ${progress}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-slate-200">
-                         <button class="expand-details-btn w-full text-indigo-600 font-bold flex items-center justify-center gap-2" data-order-id="${order.id}">
-                            <span>عرض التفاصيل</span>
-                            <i data-feather="chevron-down" class="transition-transform"></i>
-                         </button>
-                    </div>
-                    <div id="timeline-${order.id}" class="timeline-details mt-4 pt-4 border-t border-slate-200 space-y-4"></div>
-                `;
-                ordersListEl.appendChild(card);
+                const borderColorClass = order.orderType === 'flexo' ? 'border-sky-500' : 'border-purple-500';
+
+                const item = document.createElement('div');
+                item.className = `bg-white rounded-xl shadow-md p-4 transition-all hover:shadow-lg hover:ring-2 hover:ring-indigo-500 border-r-4 ${borderColorClass}`;
+                item.innerHTML = `<div class="flex flex-col sm:flex-row justify-between items-center gap-4"><div class="w-full sm:w-auto flex items-center gap-4"><span class="text-lg font-extrabold text-indigo-600">#${order.orderCode || 'N/A'}</span><div><h4 class="font-bold text-lg text-slate-800">${order.productName}</h4><p class="text-sm text-slate-500">للعميل: ${order.customerName}</p><p class="text-sm text-slate-500 font-semibold">المندوب: ${order.repName || 'غير محدد'}</p></div></div><div class="w-full sm:w-auto flex items-center justify-between gap-4">${ order.status === 'active' ? `<div class="w-32"><div class="flex justify-between mb-1"><span class="text-xs font-bold text-slate-700">التقدم</span><span class="text-xs font-bold text-indigo-700">${Math.round(progress)}%</span></div><div class="w-full bg-slate-200 rounded-full h-2"><div class="bg-indigo-600 h-2 rounded-full" style="width: ${progress}%"></div></div></div>` : ''}${statusBadge}<button data-order-id="${order.id}" class="view-details-btn btn-secondary !px-3 !py-1.5 !text-sm"><i data-feather="eye" class="w-4 h-4 ml-1"></i><span>عرض</span></button></div></div>`;
+                element.appendChild(item);
             });
             feather.replace();
         }
 
-        function renderArchivedOrders(orders) {
-            archivedOrdersListEl.innerHTML = '';
+        function renderStatistics(activeOrders, archivedOrders) {
+            const activeCount = activeOrders.length;
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const completedThisMonth = archivedOrders.filter(o => o.status === 'completed' && o.completedAt?.toDate() >= startOfMonth).length;
+
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - 7);
+            const recentOrders = [...activeOrders, ...archivedOrders].filter(o => o.createdAt?.toDate() >= startOfWeek && o.repName);
+            const repCounts = recentOrders.reduce((acc, order) => {
+                acc[order.repName] = (acc[order.repName] || 0) + 1;
+                return acc;
+            }, {});
+            const topRep = Object.entries(repCounts).sort((a, b) => b[1] - a[1])[0];
+
+            let topRepHtml = `<p class="text-slate-500 font-bold">مندوب الأسبوع</p><p class="text-3xl font-extrabold text-slate-800">-</p>`;
+            if (topRep) {
+                topRepHtml = `<p class="text-slate-500 font-bold">مندوب الأسبوع</p><p class="text-2xl font-extrabold text-slate-800 truncate" title="${topRep[0]}">${topRep[0]}</p><p class="text-sm font-semibold text-slate-500">${topRep[1]} طلبات</p>`;
+            }
+
+            statsContainer.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-5"><div class="bg-blue-100 text-blue-600 rounded-full p-4"><i data-feather="loader" class="w-8 h-8"></i></div><div><p class="text-slate-500 font-bold">الطلبات الحالية</p><p class="text-3xl font-extrabold text-slate-800">${activeCount}</p></div></div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-5"><div class="bg-green-100 text-green-600 rounded-full p-4"><i data-feather="check-circle" class="w-8 h-8"></i></div><div><p class="text-slate-500 font-bold">اكتملت هذا الشهر</p><p class="text-3xl font-extrabold text-slate-800">${completedThisMonth}</p></div></div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-5"><div class="bg-yellow-100 text-yellow-600 rounded-full p-4"><i data-feather="star" class="w-8 h-8"></i></div><div class="flex-1 min-w-0">${topRepHtml}</div></div>
+                <div class="bg-white p-6 rounded-2xl shadow-lg flex items-center gap-5"><div class="bg-red-100 text-red-600 rounded-full p-4"><i data-feather="archive" class="w-8 h-8"></i></div><div><p class="text-slate-500 font-bold">إجمالي الطلبات المكتملة</p><p class="text-3xl font-extrabold text-slate-800">${archivedOrders.filter(o => o.status === 'completed').length}</p></div></div>`;
+            feather.replace();
+        }
+
+        function renderAdvancedStatistics(activeOrders, archivedOrders) {
+            const now = new Date();
+            const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+            const completedThisMonth = archivedOrders.filter(o => o.status === 'completed' && o.completedAt?.toDate() >= startOfThisMonth);
+            const completedLastMonth = archivedOrders.filter(o => o.status === 'completed' && o.completedAt?.toDate() >= startOfLastMonth && o.completedAt?.toDate() <= endOfLastMonth);
+
+            const createdThisMonth = allOrders.filter(o => o.createdAt?.toDate() >= startOfThisMonth);
+            const createdLastMonth = allOrders.filter(o => o.createdAt?.toDate() >= startOfLastMonth && o.createdAt?.toDate() <= endOfLastMonth);
+
+            document.getElementById('monthly-comparison').innerHTML = `
+                <div><p class="text-slate-500 font-bold text-lg">طلبات جديدة</p><p class="text-4xl font-extrabold text-indigo-600 mt-2">${createdThisMonth.length}</p><p class="text-slate-500 font-semibold">الشهر الماضي: ${createdLastMonth.length}</p></div>
+                <div><p class="text-slate-500 font-bold text-lg">طلبات مكتملة</p><p class="text-4xl font-extrabold text-green-600 mt-2">${completedThisMonth.length}</p><p class="text-slate-500 font-semibold">الشهر الماضي: ${completedLastMonth.length}</p></div>
+                <div><p class="text-slate-500 font-bold text-lg">طلبات جارية</p><p class="text-4xl font-extrabold text-blue-600 mt-2">${activeOrders.length}</p></div>
+            `;
+
+            const repsData = {};
+            createdThisMonth.forEach(order => {
+                if (!order.repName) return;
+                if (!repsData[order.repName]) {
+                    repsData[order.repName] = { active: 0, completed: 0, total: 0 };
+                }
+                if (order.status === 'active') repsData[order.repName].active++;
+                if (order.status === 'completed' && order.completedAt?.toDate() >= startOfThisMonth) repsData[order.repName].completed++;
+                repsData[order.repName].total = repsData[order.repName].active + repsData[order.repName].completed;
+            });
+
+            const tableBody = document.querySelector('#reps-performance-table tbody');
+            tableBody.innerHTML = '';
+            if (Object.keys(repsData).length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="p-6 text-slate-500">لا توجد بيانات لعرضها لهذا الشهر.</td></tr>`;
+                return;
+            }
+
+            Object.entries(repsData).sort((a,b) => b[1].total - a[1].total).forEach(([name, data]) => {
+                const row = `
+                    <tr class="border-b border-slate-200">
+                        <td class="p-4 font-semibold text-slate-800">${name}</td>
+                        <td class="p-4 text-slate-600">${data.active}</td>
+                        <td class="p-4 text-slate-600">${data.completed}</td>
+                        <td class="p-4 font-bold text-indigo-600">${data.total}</td>
+                    </tr>`;
+                tableBody.innerHTML += row;
+            });
+        }
+        
+        function renderPerformanceChart(orders) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const currentYear = new Date().getFullYear();
+
+            const months = Array.from({length: 12}, (_, i) => new Date(0, i).toLocaleString('ar-EG', {month: 'long'}));
+            const monthlyData = {
+                orderCount: Array(12).fill(0),
+                totalCompletionDays: Array(12).fill(0),
+                completedOrdersCount: Array(12).fill(0)
+            };
+
             orders.forEach(order => {
-                let statusBadge = '';
-                if (order.status === 'stopped') {
-                    statusBadge = `<span class="text-sm font-bold px-3 py-1 rounded-full bg-red-100 text-red-800">متوقف</span>`;
-                } else if (order.status === 'completed') {
-                    statusBadge = `<span class="text-sm font-bold px-3 py-1 rounded-full bg-green-100 text-green-800">مكتمل</span>`;
+                const createdAt = toJSDate(order.createdAt);
+                if (createdAt && createdAt.getFullYear() === currentYear) {
+                    const monthIndex = createdAt.getMonth();
+                    monthlyData.orderCount[monthIndex]++;
                 }
 
-                const item = document.createElement('div');
-                item.className = 'bg-white rounded-xl shadow-md p-4 flex justify-between items-center transition-all hover:shadow-lg hover:ring-2 hover:ring-indigo-500';
-                item.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <span class="text-lg font-extrabold text-indigo-600">#${order.orderCode || 'N/A'}</span>
-                        <div>
-                            <h4 class="font-bold text-lg text-slate-800">${order.productName}</h4>
-                            <p class="text-sm text-slate-500">${order.customerName}</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        ${statusBadge}
-                        <button data-order-id="${order.id}" class="view-archive-btn btn-secondary !px-3 !py-1.5 !text-sm">
-                             <i data-feather="eye" class="w-4 h-4 mr-1"></i>
-                             عرض
-                        </button>
-                    </div>
-                `;
-                archivedOrdersListEl.appendChild(item);
+                const completedAt = toJSDate(order.completedAt);
+                if (createdAt && completedAt && completedAt.getFullYear() === currentYear && order.status === 'completed') {
+                    const monthIndex = completedAt.getMonth();
+                    const duration = (completedAt - createdAt) / (1000 * 60 * 60 * 24);
+                    monthlyData.totalCompletionDays[monthIndex] += duration;
+                    monthlyData.completedOrdersCount[monthIndex]++;
+                }
             });
-            feather.replace();
+
+            const avgCompletionSpeed = monthlyData.completedOrdersCount.map((count, index) => {
+                return count > 0 ? (monthlyData.totalCompletionDays[index] / count).toFixed(1) : 0;
+            });
+            
+            if (performanceChartInstance) {
+                performanceChartInstance.destroy();
+            }
+
+            performanceChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'عدد الطلبات الجديدة',
+                            data: monthlyData.orderCount,
+                            backgroundColor: 'rgba(79, 70, 229, 0.7)',
+                            borderColor: 'rgba(79, 70, 229, 1)',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'متوسط سرعة الإنجاز (يوم)',
+                            data: avgCompletionSpeed,
+                            type: 'line',
+                            borderColor: 'rgba(249, 115, 22, 1)',
+                            backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                            tension: 0.3,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false, },
+                    scales: {
+                        y: { type: 'linear', display: true, position: 'left', title: { display: true, text: 'عدد الطلبات', font: { weight: 'bold' } } },
+                        y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: 'متوسط الأيام', font: { weight: 'bold' } }, grid: { drawOnChartArea: false, }, },
+                        x: { ticks: { font: { family: "'Cairo', sans-serif" } } }
+                    },
+                    plugins: {
+                        legend: { position: 'top', labels: { font: { weight: 'bold', family: "'Cairo', sans-serif" } } },
+                        tooltip: { titleFont: { weight: 'bold', family: "'Cairo', sans-serif" }, bodyFont: { family: "'Cairo', sans-serif" }, }
+                    }
+                }
+            });
+        }
+
+        function toJSDate(date) {
+            if (!date) return null;
+            return typeof date.toDate === 'function' ? date.toDate() : date;
         }
 
         function renderTimeline(container, order, orderId) {
             container.innerHTML = '';
-            if (!order.stages) return; 
-
+            if (!order.stages) return;
+            
             const isStopped = order.status === 'stopped';
             const isCompleted = order.status === 'completed';
             
-            if (isStopped) {
-                container.innerHTML += `<div class="bg-red-50 border-r-4 border-red-500 p-4 rounded-lg mb-6"><div class="flex items-center"><i data-feather="alert-triangle" class="w-8 h-8 text-red-600 ml-4"></i><div><h4 class="font-extrabold text-lg text-red-800">هذا الطلب متوقف</h4><p class="text-red-700 mt-1">${order.stopReason}</p></div></div></div>`;
-            }
-
+            if (isStopped) { container.innerHTML += `<div class="bg-red-50 border-r-4 border-red-500 p-4 rounded-lg mb-6"><div class="flex items-center"><i data-feather="alert-triangle" class="w-8 h-8 text-red-600 ml-4"></i><div><h4 class="font-extrabold text-lg text-red-800">هذا الطلب متوقف</h4><p class="text-red-700 mt-1">${order.stopReason}</p></div></div></div>`; }
+            
             const completedStageIds = new Set(order.stages.filter(s => s.status === 'completed').map(s => s.id));
-
-            order.stages.forEach((stage) => {
+            
+            order.stages.forEach((stage, index, arr) => {
+                const stageDef = STAGES[order.orderType].find(s => s.id === stage.id) || {};
                 const isStageCompleted = stage.status === 'completed';
+                const isStageRequested = stage.status === 'requested';
                 const areDependenciesMet = (stage.dependencies || []).every(depId => completedStageIds.has(depId));
-                const canComplete = userRole === 'rep' && !isStageCompleted && areDependenciesMet && !isStopped && !isCompleted;
-                const endDate = stage.endDate ? new Date(stage.endDate.seconds * 1000).toLocaleDateString('ar-EG') : '...';
+                const canInteract = userRole === 'rep' && areDependenciesMet && !isStopped && !isCompleted;
+                
+                let durationText = '';
+                if (isStageCompleted) {
+                    const start = toJSDate(stage.startDate); 
+                    const end = toJSDate(stage.endDate);
+                    if (start && end) {
+                        const durationMs = end - start;
+                        const durationDays = durationMs / (1000 * 60 * 60 * 24);
+                        if (durationDays < 1) {
+                            durationText = `<span class="text-xs font-semibold text-slate-500">(أقل من يوم)</span>`;
+                        } else {
+                            durationText = `<span class="text-xs font-semibold text-slate-500">(المدة: ${Math.ceil(durationDays)} يوم)</span>`;
+                        }
+                    }
+                }
 
+                let datesHtml = '';
+                if (stageDef.requestable) {
+                    const requestedDateStr = stage.requestedDate ? `طُلب في: ${toJSDate(stage.requestedDate).toLocaleDateString('ar-EG')}` : 'لم يُطلب بعد';
+                    const completedDateStr = stage.endDate ? `اكتمل في: ${toJSDate(stage.endDate).toLocaleDateString('ar-EG')}` : (isStageRequested ? 'في انتظار التنفيذ' : '');
+                    datesHtml = `<p class="text-sm text-slate-500 mt-1">${requestedDateStr} ${completedDateStr ? `| ${completedDateStr}` : ''} ${durationText}</p>`;
+                } else {
+                    const endDateStr = stage.endDate ? `اكتمل في: ${toJSDate(stage.endDate).toLocaleDateString('ar-EG')}` : (areDependenciesMet ? 'جاهز للبدء' : 'في الانتظار');
+                    datesHtml = `<p class="text-sm text-slate-500 mt-1">${isStageCompleted ? endDateStr : (areDependenciesMet ? 'جاهز للبدء' : 'في الانتظار')} ${durationText}</p>`;
+                }
+
+                let buttonsHtml = '';
+                if (canInteract) {
+                    if (stageDef.requestable) {
+                        if (!isStageRequested && !isStageCompleted) { buttonsHtml += `<button data-order-id="${orderId}" data-stage-id="${stage.id}" class="request-stage-btn text-xs sm:text-sm bg-blue-100 text-blue-800 font-bold hover:bg-blue-200 px-2 sm:px-3 py-1 rounded-md transition whitespace-nowrap">طلب</button>`; } 
+                        else if (isStageRequested && !isStageCompleted) { buttonsHtml += `<button data-order-id="${orderId}" data-stage-id="${stage.id}" class="complete-stage-btn text-xs sm:text-sm bg-green-100 text-green-800 font-bold hover:bg-green-200 px-2 sm:px-3 py-1 rounded-md transition whitespace-nowrap">إكمال</button>`; }
+                    } else if (!isStageCompleted) { buttonsHtml += `<button data-order-id="${orderId}" data-stage-id="${stage.id}" class="complete-stage-btn text-xs sm:text-sm bg-green-100 text-green-800 font-bold hover:bg-green-200 px-2 sm:px-3 py-1 rounded-md transition whitespace-nowrap">إكمال</button>`; }
+                }
+                buttonsHtml += `<button data-order-id="${orderId}" data-stage-id="${stage.id}" data-stage-name="${stage.name}" class="add-notes-btn text-slate-500 hover:text-indigo-600 p-1 rounded-full transition"><i data-feather="message-square" class="w-5 h-5"></i></button>`;
+                
+                let notesHtml = '';
+                const notesArray = Array.isArray(stage.notes) ? stage.notes : [];
+                if (notesArray.length > 0) {
+                    notesHtml += '<div class="space-y-2 mt-2">';
+                    notesArray.slice().reverse().forEach(note => {
+                        notesHtml += `<div class="text-sm bg-yellow-50 border border-yellow-200 p-3 rounded-lg text-yellow-800"><p>${note.text}</p><p class="text-xs text-yellow-600 mt-1 text-left">${note.by.split('@')[0]} - ${toJSDate(note.date).toLocaleString('ar-EG')}</p></div>`;
+                    });
+                    notesHtml += '</div>';
+                }
+
+                let icon = 'lock'; let color = 'bg-slate-400';
+                if (isStageCompleted) { icon = 'check'; color = 'bg-green-500'; } 
+                else if (areDependenciesMet) { icon = 'play'; color = 'bg-indigo-500'; }
+                if(stageDef.requestable && isStageRequested && !isStageCompleted) { icon = 'clock'; color = 'bg-yellow-500'; }
+                
                 const item = document.createElement('div');
                 item.className = 'relative flex items-start';
-
-                item.innerHTML = `<div class="absolute top-5 right-5 -bottom-4 w-0.5 ${isStageCompleted ? 'bg-green-500' : 'bg-slate-300'}"></div><div class="absolute top-0 right-0 z-10 h-10 w-10 rounded-full flex items-center justify-center text-white flex-shrink-0 ${isStageCompleted ? 'bg-green-500' : (canComplete ? 'bg-indigo-500' : 'bg-slate-400')}"><i data-feather="${isStageCompleted ? 'check' : (canComplete ? 'play' : 'lock')}" class="w-6 h-6"></i></div><div class="mr-14 flex-1 min-w-0"><div class="flex justify-between items-center gap-2"><h4 class="font-bold text-lg text-slate-800 truncate">${stage.name}</h4><div class="flex-shrink-0 flex items-center gap-2">${canComplete ? `<button data-order-id="${orderId}" data-stage-id="${stage.id}" class="complete-stage-btn text-xs sm:text-sm bg-green-100 text-green-800 font-bold hover:bg-green-200 px-2 sm:px-3 py-1 rounded-md transition whitespace-nowrap">إكمال</button>` : ''}${userRole === 'rep' && !isStopped && !isCompleted ? `<button data-order-id="${orderId}" data-stage-id="${stage.id}" data-stage-name="${stage.name}" data-current-notes="${stage.notes || ''}" class="add-notes-btn text-slate-500 hover:text-indigo-600 p-1 rounded-full transition"><i data-feather="edit-3" class="w-5 h-5"></i></button>` : ''}</div></div><p class="text-sm text-slate-500 mt-1">${isStageCompleted ? `اكتملت في: ${endDate}` : (areDependenciesMet ? 'جاهزة للبدء' : 'في الانتظار')}</p>${stage.notes ? `<div class="text-sm bg-yellow-50 border border-yellow-200 p-3 rounded-lg mt-2 text-yellow-800">${stage.notes}</div>` : ''}</div>`;
+                const isLast = index === arr.length - 1;
+                item.innerHTML = `<div class="absolute top-5 right-5 ${isLast ? '' : '-bottom-4'} w-0.5 ${isStageCompleted ? 'bg-green-500' : 'bg-slate-300'}"></div><div class="absolute top-0 right-0 z-10 h-10 w-10 rounded-full flex items-center justify-center text-white flex-shrink-0 ${color}"><i data-feather="${icon}" class="w-6 h-6"></i></div><div class="mr-14 flex-1 min-w-0"><div class="flex justify-between items-center gap-2"><h4 class="font-bold text-lg text-slate-800 truncate">${stage.name}</h4><div class="flex-shrink-0 flex items-center gap-2">${buttonsHtml}</div></div>${datesHtml}${notesHtml}</div>`;
                 container.appendChild(item);
             });
-            
-            if (userRole === 'rep' && !isStopped && !isCompleted) {
-                container.innerHTML += `<div class="pt-6 mt-4 border-t border-slate-200"><button data-order-id="${orderId}" class="stop-order-btn btn-danger w-full"><i data-feather="pause-circle" class="w-6 h-6"></i><span>إيقاف الطلب</span></button></div>`;
+
+            if (isCompleted) {
+                const startDate = toJSDate(order.createdAt);
+                const completedDate = toJSDate(order.completedAt);
+                if (startDate && completedDate) {
+                    const totalDuration = Math.ceil((completedDate - startDate) / (1000 * 60 * 60 * 24));
+                    container.innerHTML += `<div class="mt-6 pt-4 border-t-2 border-dashed border-slate-300 text-center"><p class="text-lg font-bold text-slate-700">إجمالي مدة الطلب: <span class="text-indigo-600">${totalDuration} يوم</span></p></div>`;
+                }
             }
+            if (userRole === 'rep' && !isStopped && !isCompleted) { container.innerHTML += `<div class="pt-6 mt-4 border-t border-slate-200"><button data-order-id="${orderId}" class="stop-order-btn btn-danger w-full"><i data-feather="pause-circle" class="w-6 h-6"></i><span>إيقاف الطلب</span></button></div>`; }
             feather.replace();
         }
 
-        // --- EVENT HANDLERS & LOGIC ---
-        logoutBtn.addEventListener('click', handleLogout);
-        addOrderBtn.addEventListener('click', () => openModal(orderModal, modalContent));
-        cancelBtn.addEventListener('click', () => closeModal(orderModal, modalContent));
-        orderForm.addEventListener('submit', handleFormSubmit);
-        cancelNotesBtn.addEventListener('click', () => closeModal(notesModal, notesModalContent));
-        notesForm.addEventListener('submit', handleNotesFormSubmit);
-        cancelStopBtn.addEventListener('click', () => closeModal(stopOrderModal, stopOrderModalContent));
-        stopOrderForm.addEventListener('submit', handleStopOrderSubmit);
-        closeArchiveModalBtn.addEventListener('click', () => closeModal(archiveDetailModal, archiveDetailModalContent));
+        logoutBtn.addEventListener('click', handleLogout); 
+        addOrderBtn.addEventListener('click', () => { 
+            orderForm.reset(); 
+            flexoOptions.classList.add('hidden'); 
+            document.getElementById('modal-title').textContent = 'إضافة طلب جديد';
+            openModal(orderModal, modalContent); 
+        });
+        cancelBtn.addEventListener('click', () => closeModal(orderModal, modalContent)); 
+        orderForm.addEventListener('submit', handleFormSubmit); 
+        cancelNotesBtn.addEventListener('click', () => closeModal(notesModal, notesModalContent)); 
+        notesForm.addEventListener('submit', handleNotesFormSubmit); 
+        cancelStopBtn.addEventListener('click', () => closeModal(stopOrderModal, stopOrderModalContent)); 
+        stopOrderForm.addEventListener('submit', handleStopOrderSubmit); 
+        closeDetailModalBtn.addEventListener('click', () => closeModal(detailModal, detailModalContent)); 
+        exportExcelBtn.addEventListener('click', exportToCSV);
         
-        activeTab.addEventListener('click', () => {
-            activeTab.classList.replace('tab-inactive', 'tab-active');
-            archiveTab.classList.replace('tab-active', 'tab-inactive');
-            activeContent.classList.remove('hidden');
-            archivedContent.classList.add('hidden');
-        });
-
-        archiveTab.addEventListener('click', () => {
-            archiveTab.classList.replace('tab-inactive', 'tab-active');
-            activeTab.classList.replace('tab-active', 'tab-inactive');
-            archivedContent.classList.remove('hidden');
-            activeContent.classList.add('hidden');
-        });
-
-        const filterOrders = (term, orders) => orders.filter(order => 
-            (order.orderCode?.toString().toLowerCase().includes(term)) ||
-            (order.customerName?.toLowerCase().includes(term)) ||
-            (order.productName?.toLowerCase().includes(term))
-        );
-
-        searchActiveInput.addEventListener('input', (e) => {
-            renderActiveOrders(filterOrders(e.target.value.toLowerCase(), allActiveOrders));
-        });
-
-        searchArchiveInput.addEventListener('input', (e) => {
-            renderArchivedOrders(filterOrders(e.target.value.toLowerCase(), allArchivedOrders));
-        });
-
-        mainContainer.addEventListener('click', async (e) => {
-            // Active Order Expand/Collapse
-            const expandBtn = e.target.closest('.expand-details-btn');
-            if (expandBtn) {
-                const orderId = expandBtn.dataset.orderId;
-                const timelineContainer = document.getElementById(`timeline-${orderId}`);
-                const icon = expandBtn.querySelector('i');
-
-                if (timelineContainer.style.maxHeight && timelineContainer.style.maxHeight !== '0px') {
-                    timelineContainer.style.maxHeight = '0px';
-                    icon.style.transform = 'rotate(0deg)';
+        function switchTab(activeTabId) {
+            const tabs = [
+                { id: 'active-tab', content: activeContent },
+                { id: 'archive-tab', content: archivedContent },
+                { id: 'stats-tab', content: statsContent }
+            ];
+            tabs.forEach(tab => {
+                const tabEl = document.getElementById(tab.id);
+                if (tab.id === activeTabId) {
+                    tabEl.classList.add('tab-active');
+                    tabEl.classList.remove('tab-inactive');
+                    tab.content.classList.remove('hidden');
                 } else {
-                    const orderDocRef = doc(db, "orders", orderId);
-                    const docSnap = await getDoc(orderDocRef);
-                    if (docSnap.exists()) {
-                        renderTimeline(timelineContainer, docSnap.data(), orderId);
-                        timelineContainer.style.maxHeight = timelineContainer.scrollHeight + "px";
-                        icon.style.transform = 'rotate(180deg)';
-                    }
+                    tabEl.classList.add('tab-inactive');
+                    tabEl.classList.remove('tab-active');
+                    tab.content.classList.add('hidden');
                 }
-            }
+            });
+        }
+        activeTab.addEventListener('click', () => switchTab('active-tab'));
+        archiveTab.addEventListener('click', () => switchTab('archive-tab'));
+        statsTab.addEventListener('click', () => switchTab('stats-tab'));
 
-            // Archive Order View Modal
-            const viewArchiveBtn = e.target.closest('.view-archive-btn');
-            if(viewArchiveBtn) {
-                const orderId = viewArchiveBtn.dataset.orderId;
-                const orderDocRef = doc(db, "orders", orderId);
-                const docSnap = await getDoc(orderDocRef);
-                if (docSnap.exists()) {
-                    const order = docSnap.data();
-                    archiveModalTitle.textContent = `تفاصيل الطلب #${order.orderCode || 'N/A'}`;
-                    renderTimeline(archiveModalBody, order, orderId);
-                    openModal(archiveDetailModal, archiveDetailModalContent);
-                }
-            }
+        const filterOrders = (term, filterType, orders) => {
+            if (!term) return orders;
+            const t = term.toLowerCase(); 
+            return orders.filter(order => { 
+                if (filterType === 'all') { 
+                    return (order.orderCode?.toString().toLowerCase().includes(t)) || 
+                           (order.customerName?.toLowerCase().includes(t)) || 
+                           (order.productName?.toLowerCase().includes(t)) || 
+                           (order.repName?.toLowerCase().includes(t)); 
+                } 
+                if (filterType === 'orderCode') return order.orderCode?.toString().toLowerCase().includes(t); 
+                if (filterType === 'customerName') return order.customerName?.toLowerCase().includes(t); 
+                if (filterType === 'productName') return order.productName?.toLowerCase().includes(t); 
+                if (filterType === 'repName') return order.repName?.toLowerCase().includes(t); 
+                return true; 
+            });
+        }
+
+        function renderFilteredActiveOrders() { 
+            const term = searchActiveInput.value; 
+            const filterType = searchActiveFilter.value; 
+            const filteredOrders = filterOrders(term, filterType, allActiveOrders);
+            renderOrdersList(ordersListEl, filteredOrders);
+            noOrdersMessage.classList.toggle('hidden', filteredOrders.length > 0);
+        }
+
+        function renderFilteredArchivedOrders() { 
+            const term = searchArchiveInput.value; 
+            const filterType = searchArchiveFilter.value; 
+            const filteredOrders = filterOrders(term, filterType, allArchivedOrders);
+            renderOrdersList(archivedOrdersListEl, filteredOrders);
+            noArchivedOrdersMessage.classList.toggle('hidden', filteredOrders.length > 0);
+        }
+
+        searchActiveInput.addEventListener('input', renderFilteredActiveOrders); 
+        searchActiveFilter.addEventListener('change', renderFilteredActiveOrders); 
+        searchArchiveInput.addEventListener('input', renderFilteredArchivedOrders); 
+        searchArchiveFilter.addEventListener('change', renderFilteredArchivedOrders);
+        
+        mainContainer.addEventListener('click', async (e) => { 
+            const viewBtn = e.target.closest('.view-details-btn'); 
+            if(viewBtn) { 
+                const orderId = viewBtn.dataset.orderId; 
+                const docSnap = await getDoc(doc(db, "orders", orderId)); 
+                if (docSnap.exists()) { 
+                    const order = docSnap.data(); 
+                    detailModalTitle.textContent = `تفاصيل الطلب #${order.orderCode || 'N/A'}`; 
+                    renderTimeline(detailModalBody, order, orderId); 
+                    openModal(detailModal, detailModalContent); 
+                } 
+            } 
+        });
+
+        detailModal.addEventListener('click', e => { 
+            const completeBtn = e.target.closest('.complete-stage-btn'); 
+            if (completeBtn) completeStage(completeBtn.dataset.orderId, completeBtn.dataset.stageId); 
             
-            // Timeline Buttons
-            if (e.target.closest('.complete-stage-btn')) {
-                const btn = e.target.closest('.complete-stage-btn');
-                completeStage(btn.dataset.orderId, btn.dataset.stageId);
-            }
-            if (e.target.closest('.add-notes-btn')) {
-                const btn = e.target.closest('.add-notes-btn');
-                openNotesModal(btn.dataset.orderId, btn.dataset.stageId, btn.dataset.stageName, btn.dataset.currentNotes);
-            }
-            if (e.target.closest('.stop-order-btn')) {
-                const btn = e.target.closest('.stop-order-btn');
-                openStopOrderModal(btn.dataset.orderId);
-            }
+            const requestBtn = e.target.closest('.request-stage-btn'); 
+            if (requestBtn) requestStage(requestBtn.dataset.orderId, requestBtn.dataset.stageId); 
+            
+            const notesBtn = e.target.closest('.add-notes-btn'); 
+            if (notesBtn) openNotesModal(notesBtn.dataset.orderId, notesBtn.dataset.stageId, notesBtn.dataset.stageName); 
+            
+            const stopBtn = e.target.closest('.stop-order-btn'); 
+            if (stopBtn) openStopOrderModal(stopBtn.dataset.orderId); 
         });
-
-        async function handleFormSubmit(e) {
+        
+        const setupAutocomplete = (inputEl, suggestionsEl, collectionName) => { inputEl.addEventListener('input', async () => { const value = inputEl.value.toLowerCase(); if (value.length < 1) { suggestionsEl.innerHTML = ''; suggestionsEl.classList.add('hidden'); return; } const q = query(collection(db, collectionName), where('nameLower', '>=', value), where('nameLower', '<=', value + '\uf8ff'), limit(5)); const querySnapshot = await getDocs(q); suggestionsEl.innerHTML = ''; if (querySnapshot.empty) { suggestionsEl.classList.add('hidden'); return; } querySnapshot.forEach(doc => { const suggestion = document.createElement('div'); suggestion.textContent = doc.data().name; suggestion.className = 'autocomplete-suggestion'; suggestion.addEventListener('click', () => { inputEl.value = doc.data().name; suggestionsEl.innerHTML = ''; suggestionsEl.classList.add('hidden'); }); suggestionsEl.appendChild(suggestion); }); suggestionsEl.classList.remove('hidden'); }); document.addEventListener('click', (e) => { if (!inputEl.contains(e.target)) suggestionsEl.classList.add('hidden'); }); };
+        setupAutocomplete(repNameInput, repSuggestionsEl, 'reps'); 
+        setupAutocomplete(customerNameInput, customerSuggestionsEl, 'customers');
+        
+        async function addUniqueNameToCollection(collectionName, name) { if (!name) return; const nameLower = name.toLowerCase().trim(); const q = query(collection(db, collectionName), where('nameLower', '==', nameLower), limit(1)); const existing = await getDocs(q); if (existing.empty) { await addDoc(collection(db, collectionName), { name: name.trim(), nameLower }); } }
+        
+        async function handleFormSubmit(e) { e.preventDefault(); const repName = repNameInput.value.trim(); const customerName = customerNameInput.value.trim(); await addUniqueNameToCollection('reps', repName); await addUniqueNameToCollection('customers', customerName); const counterRef = doc(db, "counters", "ordersCounter"); let newOrderCode; try { await runTransaction(db, async (t) => { const cDoc = await t.get(counterRef); newOrderCode = (cDoc.data()?.currentNumber || 1000) + 1; t.set(counterRef, { currentNumber: newOrderCode }, { merge: true }); }); } catch (error) { console.error("Transaction failed: ", error); alert("فشل إنشاء كود الطلب."); return; } const orderType = orderTypeSelect.value; const requiresForm = document.getElementById('requires-form').checked; let stagesTemplate = JSON.parse(JSON.stringify(STAGES[orderType])); if (orderType === 'flexo') { if (!requiresForm) { stagesTemplate = stagesTemplate.filter(s => s.id !== 'form'); } else { const designStage = stagesTemplate.find(s => s.id === 'design'); if (designStage) designStage.dependencies.push('form'); } } const initialStages = stagesTemplate.map(stageDef => ({ id: stageDef.id, name: stageDef.name, dependencies: stageDef.dependencies, status: 'pending', notes: [], requestedDate: null, startDate: null, endDate: null })); const firstStage = initialStages.find(s => !s.dependencies || s.dependencies.length === 0); if (firstStage) { const now = new Date(); firstStage.status = 'completed'; firstStage.startDate = now; firstStage.endDate = now; } const newOrder = { orderCode: newOrderCode, repName: repName, customerName: customerName, productName: document.getElementById('product-name').value, quantity: parseInt(document.getElementById('quantity').value), orderType: orderType, status: 'active', createdAt: serverTimestamp(), createdBy: currentUser.uid, creatorEmail: currentUser.email, stages: initialStages }; try { await addDoc(collection(db, "orders"), newOrder); closeModal(orderModal, modalContent); } catch (error) { console.error("Error adding order: ", error); alert("حدث خطأ أثناء إضافة الطلب."); } }
+        
+        async function handleNotesFormSubmit(e) {
             e.preventDefault();
-            const counterRef = doc(db, "counters", "ordersCounter");
-            let newOrderCode;
+            const orderId = document.getElementById('notes-order-id').value;
+            const stageId = document.getElementById('notes-stage-id').value;
+            const newNoteText = document.getElementById('new-note').value.trim();
+            if (!newNoteText) return;
+
+            const orderRef = doc(db, "orders", orderId);
             try {
-                await runTransaction(db, async (transaction) => {
-                    const counterDoc = await transaction.get(counterRef);
-                    if (!counterDoc.exists()) {
-                        newOrderCode = 1;
-                        transaction.set(counterRef, { currentNumber: newOrderCode });
-                    } else {
-                        newOrderCode = counterDoc.data().currentNumber + 1;
-                        transaction.update(counterRef, { currentNumber: newOrderCode });
+                const orderSnap = await getDoc(orderRef);
+                if (orderSnap.exists()) {
+                    const orderData = orderSnap.data();
+                    const stages = [...orderData.stages];
+                    const stageIndex = stages.findIndex(s => s.id === stageId);
+                    if (stageIndex !== -1) {
+                        const newNote = { text: newNoteText, date: new Date(), by: currentUser.email };
+                        if (!Array.isArray(stages[stageIndex].notes)) stages[stageIndex].notes = [];
+                        stages[stageIndex].notes.push(newNote);
+                        await updateDoc(orderRef, { stages: stages });
+                        
+                        document.getElementById('new-note').value = '';
+
+                        const updatedOrderData = { ...orderData, stages };
+                        renderTimeline(detailModalBody, updatedOrderData, orderId);
+                        openNotesModal(orderId, stageId, stages[stageIndex].name, updatedOrderData);
                     }
-                });
-            } catch (error) {
-                console.error("Transaction failed: ", error);
-                alert("فشل إنشاء كود الطلب، يرجى المحاولة مرة أخرى.");
-                return;
-            }
-
-            const orderType = orderTypeSelect.value;
-            const requiresForm = document.getElementById('requires-form').checked;
-            let stagesTemplate = JSON.parse(JSON.stringify(STAGES[orderType]));
-            if (orderType === 'flexo') {
-                if (!requiresForm) {
-                    stagesTemplate = stagesTemplate.filter(s => s.id !== 'form');
-                } else {
-                    const designStage = stagesTemplate.find(s => s.id === 'design');
-                    if (designStage) designStage.dependencies.push('form');
                 }
-            }
-            const initialStages = stagesTemplate.map(stage => ({ id: stage.id, name: stage.name, dependencies: stage.dependencies, status: 'pending', startDate: null, endDate: null, notes: '' }));
-            const firstStage = initialStages.find(s => s.dependencies.length === 0);
-            if (firstStage) {
-                firstStage.status = 'completed';
-                firstStage.startDate = new Date();
-                firstStage.endDate = new Date();
-            }
-            const newOrder = { orderCode: newOrderCode, customerName: document.getElementById('customer-name').value, productName: document.getElementById('product-name').value, quantity: parseInt(document.getElementById('quantity').value), orderType: orderType, status: 'active', createdAt: serverTimestamp(), createdBy: currentUser.uid, creatorEmail: currentUser.email, stages: initialStages };
-            try { await addDoc(collection(db, "orders"), newOrder); closeModal(orderModal, modalContent); } catch (error) { console.error("Error adding order: ", error); alert("حدث خطأ أثناء إضافة الطلب."); }
+            } catch (error) { console.error("Error adding note: ", error); alert("حدث خطأ."); }
         }
+        
+        async function handleStopOrderSubmit(e) { e.preventDefault(); const orderId = document.getElementById('stop-order-id').value; const reason = document.getElementById('stop-reason').value; try { await updateDoc(doc(db, "orders", orderId), { status: 'stopped', stopReason: reason, stoppedAt: serverTimestamp() }); closeModal(stopOrderModal, stopOrderModalContent); closeModal(detailModal, detailModalContent); } catch (error) { console.error("Error stopping order: ", error); alert("حدث خطأ."); } }
+        
+        async function updateStageStatus(orderId, stageId, updates) { const orderRef = doc(db, "orders", orderId); try { const orderSnap = await getDoc(orderRef); if (orderSnap.exists()) { const stages = [...orderSnap.data().stages]; const stageIndex = stages.findIndex(s => s.id === stageId); if (stageIndex !== -1) { if (updates.status === 'completed' && !stages[stageIndex].startDate) { updates.startDate = updates.endDate; } Object.assign(stages[stageIndex], updates); const allComplete = stages.every(s => s.status === 'completed'); const finalUpdates = { stages: stages }; if (allComplete) { finalUpdates.status = 'completed'; finalUpdates.completedAt = serverTimestamp(); } await updateDoc(orderRef, finalUpdates); if (!detailModal.classList.contains('hidden')) { const updatedOrderData = { ...orderSnap.data(), ...finalUpdates, stages: stages }; renderTimeline(detailModalBody, updatedOrderData, orderId); } } } } catch (error) { console.error("Error updating stage:", error); alert("حدث خطأ أثناء تحديث المرحلة."); } }
+        
+        function requestStage(orderId, stageId) { if (userRole !== 'rep') return; updateStageStatus(orderId, stageId, { status: 'requested', requestedDate: new Date() }); }
+        
+        function completeStage(orderId, stageId) { if (userRole !== 'rep') return; updateStageStatus(orderId, stageId, { status: 'completed', endDate: new Date() }); }
+        
+        function handleLogout() { if (unsubscribeOrders) unsubscribeOrders(); signOut(auth).catch((error) => console.error('Logout Error:', error)); }
 
-        async function handleNotesFormSubmit(e) { e.preventDefault(); const orderId = document.getElementById('notes-order-id').value; const stageId = document.getElementById('notes-stage-id').value; const notes = document.getElementById('stage-notes').value; const orderRef = doc(db, "orders", orderId); try { const orderSnap = await getDoc(orderRef); if (orderSnap.exists()) { const stages = [...orderSnap.data().stages]; const stageIndex = stages.findIndex(s => s.id === stageId); if (stageIndex !== -1) { stages[stageIndex].notes = notes; await updateDoc(orderRef, { stages: stages }); closeModal(notesModal, notesModalContent); } } } catch (error) { console.error("Error updating notes: ", error); alert("حدث خطأ أثناء تحديث الملاحظات."); } }
-        async function handleStopOrderSubmit(e) { e.preventDefault(); const orderId = document.getElementById('stop-order-id').value; const reason = document.getElementById('stop-reason').value; const orderRef = doc(db, "orders", orderId); try { await updateDoc(orderRef, { status: 'stopped', stopReason: reason, stoppedAt: serverTimestamp() }); closeModal(stopOrderModal, stopOrderModalContent); } catch (error) { console.error("Error stopping order: ", error); alert("حدث خطأ أثناء إيقاف الطلب."); } }
-        async function completeStage(orderId, stageIdToComplete) { if (userRole !== 'rep') return; const orderRef = doc(db, "orders", orderId); try { const orderSnap = await getDoc(orderRef); if (orderSnap.exists()) { const orderData = orderSnap.data(); const stages = [...orderData.stages]; const stageIndex = stages.findIndex(s => s.id === stageIdToComplete); if (stageIndex !== -1) { stages[stageIndex].status = 'completed'; stages[stageIndex].endDate = new Date(); if (!stages[stageIndex].startDate) stages[stageIndex].startDate = new Date(); } const allComplete = stages.every(s => s.status === 'completed'); const updates = { stages: stages }; if (allComplete) { updates.status = 'completed'; updates.completedAt = serverTimestamp(); } await updateDoc(orderRef, updates); } } catch (error) { console.error("Error updating stage: ", error); alert("حدث خطأ أثناء تحديث المرحلة."); } }
-        function handleLogout() { if (unsubscribeActive) unsubscribeActive(); if (unsubscribeArchived) unsubscribeArchived(); signOut(auth).then(() => { window.location.href = 'login.html'; }).catch((error) => console.error('Logout Error:', error)); }
+        function openModal(modal, content) { modal.classList.remove('hidden'); setTimeout(() => { content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 10); }
 
-        // --- MODAL UTILITY FUNCTIONS ---
-        function openModal(modal, content) {
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                content.classList.remove('scale-95', 'opacity-0');
-                content.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
-
-        function closeModal(modal, content) {
-            content.classList.add('scale-95', 'opacity-0');
-            content.classList.remove('scale-100', 'opacity-100');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
-        function openNotesModal(orderId, stageId, stageName, currentNotes) {
+        function closeModal(modal, content) { content.classList.add('scale-95', 'opacity-0'); content.classList.remove('scale-100', 'opacity-100'); setTimeout(() => { modal.classList.add('hidden'); }, 300); }
+        
+        async function openNotesModal(orderId, stageId, stageName, orderData) {
             document.getElementById('notes-order-id').value = orderId;
             document.getElementById('notes-stage-id').value = stageId;
             document.getElementById('notes-modal-title').textContent = `ملاحظات على: ${stageName}`;
-            document.getElementById('stage-notes').value = currentNotes;
+            notesForm.reset();
+
+            const renderNotes = (data) => {
+                const stage = data.stages.find(s => s.id === stageId);
+                notesListEl.innerHTML = '';
+                const notesArray = Array.isArray(stage.notes) ? stage.notes : [];
+                if (notesArray.length > 0) {
+                    notesArray.slice().reverse().forEach(note => {
+                        const noteEl = document.createElement('div');
+                        noteEl.className = 'bg-slate-100 p-3 rounded-lg';
+                        noteEl.innerHTML = `<p class="text-slate-800">${note.text}</p><p class="text-xs text-slate-500 mt-1 text-left">${note.by.split('@')[0]} - ${toJSDate(note.date).toLocaleString('ar-EG')}</p>`;
+                        notesListEl.appendChild(noteEl);
+                    });
+                } else {
+                    notesListEl.innerHTML = '<p class="text-center text-slate-500">لا توجد ملاحظات حالية.</p>';
+                }
+            };
+
+            if (orderData) {
+                renderNotes(orderData);
+            } else {
+                const orderSnap = await getDoc(doc(db, "orders", orderId));
+                if (orderSnap.exists()) {
+                    renderNotes(orderSnap.data());
+                }
+            }
             openModal(notesModal, notesModalContent);
         }
         
-        function openStopOrderModal(orderId) {
-            document.getElementById('stop-order-id').value = orderId;
-            stopOrderForm.reset();
-            openModal(stopOrderModal, stopOrderModalContent);
-        }
+        function openStopOrderModal(orderId) { document.getElementById('stop-order-id').value = orderId; stopOrderForm.reset(); openModal(stopOrderModal, stopOrderModalContent); }
+        
+        orderTypeSelect.addEventListener('change', () => { flexoOptions.classList.toggle('hidden', orderTypeSelect.value !== 'flexo'); });
+        
+        function exportToCSV() { const headers = ['كود الطلب', 'اسم المنتج', 'اسم العميل', 'اسم المندوب', 'الكمية', 'نوع الطلب', 'الحالة', 'تاريخ الإنشاء', 'التقدم (%)']; const rows = allActiveOrders.map(order => { const completed = (order.stages || []).filter(s => s.status === 'completed').length; const total = (order.stages || []).length; const progress = total > 0 ? Math.round((completed / total) * 100) : 0; return [order.orderCode, order.productName, order.customerName, order.repName || '', order.quantity, order.orderType, 'حالي', order.createdAt ? toJSDate(order.createdAt).toLocaleDateString('ar-EG') : '', progress].join(','); }); const csvContent = "data:text/csv;charset=utf-8," + '\uFEFF' + [headers.join(','), ...rows].join('\n'); const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", `active-orders-${new Date().toISOString().split('T')[0]}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link); }
 
-        orderTypeSelect.addEventListener('change', () => {
-             flexoOptions.classList.toggle('hidden', orderTypeSelect.value !== 'flexo');
-        });
     </script>
 </body>
 </html>
