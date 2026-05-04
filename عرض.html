@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | نظام متابعة الطلبات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // ✨ NEW: Tailwind Dark Mode Configuration
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+        }
+        .sidebar-link {
+            @apply flex items-center gap-4 px-4 py-3 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-cyan-500 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white transition-colors duration-200;
+        }
+        .sidebar-active {
+            @apply bg-cyan-500/10 text-cyan-500 font-bold dark:text-cyan-400;
+        }
+        .sidebar-transition {
+            transition: transform 0.3s ease-in-out;
+        }
+
+        /* --- NEW CUSTOM SCROLLBAR (Dual Theme) --- */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #e5e7eb; /* gray-200 */
+            border-radius: 10px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e293b; /* slate-800 */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #9ca3af; /* gray-400 */
+            border-radius: 10px;
+            border: 2px solid #e5e7eb; /* gray-200 */
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #64748b; /* slate-500 */
+            border-color: #1e293b; /* slate-800 */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; /* gray-500 */
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; /* slate-400 */
+        }
+        
+        /* For Firefox */
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #9ca3af #e5e7eb;
+        }
+        .dark .custom-scrollbar {
+            scrollbar-color: #64748b #1e293b;
+        }
+        /* --- END CUSTOM SCROLLBAR --- */
+
+        /* --- ✨ NEW ANIMATION FOR ACTIVE STAGE ✨ --- */
+        @keyframes pulse-blue {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+        }
+        .animate-pulse-blue {
+            animation: pulse-blue 2s infinite;
+        }
+    </style>
+</head>
+<body class="text-gray-800 dark:text-slate-200">
+
+    <div class="flex h-screen bg-gray-100 dark:bg-slate-900">
+        <aside id="sidebar" class="w-64 flex-shrink-0 bg-white dark:bg-slate-800 p-6 flex-col justify-between fixed md:relative inset-y-0 right-0 z-50 transform translate-x-full md:translate-x-0 sidebar-transition hidden md:flex">
+            <div>
+                <div class="flex items-center gap-3 mb-10">
+                    <div class="bg-cyan-500/10 p-2 rounded-lg"><i data-feather="box" class="w-8 h-8 text-cyan-500 dark:text-cyan-400"></i></div>
+                    <h1 class="text-xl font-extrabold text-gray-900 dark:text-white">لوحة التحكم</h1>
+                </div>
+                <nav class="space-y-3">
+                    <a href="#home" class="sidebar-link sidebar-active">
+                        <i data-feather="clipboard" class="w-6 h-6"></i><span>الطلبات الحالية</span>
+                    </a>
+                    <a href="#completed-orders" class="sidebar-link">
+                        <i data-feather="check-square" class="w-6 h-6"></i><span>الطلبات المكتملة</span>
+                    </a>
+                    <a href="#stats" class="sidebar-link">
+                        <i data-feather="bar-chart-2" class="w-6 h-6"></i><span>الإحصائيات</span>
+                    </a>
+                </nav>
+            </div>
+             <div class="mt-auto">
+                 <button id="theme-toggle-btn" class="w-full h-12 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-slate-700/50 dark:hover:bg-slate-700 flex items-center justify-center text-gray-500 hover:text-cyan-500 dark:text-slate-400 dark:hover:text-cyan-400 transition-all duration-200">
+                    <i id="theme-icon-sun" data-feather="sun" class="w-6 h-6"></i>
+                    <i id="theme-icon-moon" data-feather="moon" class="w-6 h-6 hidden"></i>
+                </button>
+            </div>
+             </aside>
+
+        <main class="flex-1 overflow-y-auto custom-scrollbar">
+             <header class="md:hidden sticky top-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm z-40 p-4 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="bg-cyan-500/10 p-2 rounded-lg"><i data-feather="box" class="w-7 h-7 text-cyan-500 dark:text-cyan-400"></i></div>
+                    <h1 class="text-lg font-extrabold text-gray-900 dark:text-white">لوحة التحكم</h1>
+                </div>
+                <button id="menu-toggle" class="text-gray-800 dark:text-white p-2">
+                    <i data-feather="menu" class="w-6 h-6"></i>
+                </button>
+            </header>
+
+            <div class="p-4 sm:p-8">
+                
+                <section id="home" class="content-section">
+                    <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-6">نظرة عامة</h2>
+                    <div id="stats-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl animate-pulse"><div class="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 dark:bg-slate-700 rounded w-1/4"></div></div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl animate-pulse"><div class="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 dark:bg-slate-700 rounded w-1/4"></div></div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl animate-pulse"><div class="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 dark:bg-slate-700 rounded w-1/4"></div></div>
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl animate-pulse"><div class="h-6 bg-gray-200 dark:bg-slate-700 rounded w-1/2 mb-3"></div><div class="h-8 bg-gray-200 dark:bg-slate-700 rounded w-1/4"></div></div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 mt-12">
+                        <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">الطلبات الحالية</h2>
+                        <div class="relative w-full md:w-72">
+                            <input type="text" id="current-search-input" placeholder="ابحث في الطلبات الحالية..." class="w-full pl-10 pr-4 py-2 text-base bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-700 rounded-lg focus:ring-cyan-500 focus:border-cyan-500 transition">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-feather="search" class="w-5 h-5 text-gray-400 dark:text-slate-400"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-sm text-right">
+                                <thead class="bg-gray-50 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-4">كود الطلب</th>
+                                        <th class="p-4">المنتج والعميل</th>
+                                        <th class="p-4 hidden lg:table-cell">المندوب</th>
+                                        <th class="p-4 hidden sm:table-cell">تاريخ الإنشاء</th>
+                                        <th class="p-4">التقدم</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="current-orders-tbody"></tbody>
+                            </table>
+                            <div id="no-current-orders-message" class="hidden text-center py-16"><i data-feather="folder" class="w-12 h-12 mx-auto text-gray-400 dark:text-slate-500"></i><p class="mt-4 text-lg font-bold text-gray-400 dark:text-slate-500">لا توجد طلبات حالية لعرضها.</p></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="completed-orders" class="content-section hidden">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                        <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">سجل الطلبات المكتملة</h2>
+                        <div class="relative w-full md:w-72">
+                            <input type="text" id="completed-search-input" placeholder="ابحث في الطلبات المكتملة..." class="w-full pl-10 pr-4 py-2 text-base bg-white dark:bg-slate-800 border-2 border-gray-300 dark:border-slate-700 rounded-lg focus:ring-cyan-500 focus:border-cyan-500 transition">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-feather="search" class="w-5 h-5 text-gray-400 dark:text-slate-400"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-xl overflow-hidden border border-gray-200 dark:border-slate-700">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-sm text-right">
+                                <thead class="bg-gray-50 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400 uppercase text-xs">
+                                    <tr>
+                                        <th class="p-4">كود الطلب</th>
+                                        <th class="p-4">المنتج والعميل</th>
+                                        <th class="p-4 hidden lg:table-cell">المندوب</th>
+                                        <th class="p-4 hidden sm:table-cell">تاريخ الإنشاء</th>
+                                        <th class="p-4">الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="completed-orders-tbody"></tbody>
+                            </table>
+                            <div id="no-completed-orders-message" class="hidden text-center py-16"><i data-feather="folder" class="w-12 h-12 mx-auto text-gray-400 dark:text-slate-500"></i><p class="mt-4 text-lg font-bold text-gray-400 dark:text-slate-500">لا توجد طلبات مكتملة لعرضها.</p></div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="stats" class="content-section hidden space-y-8">
+                    <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white mb-6">الإحصائيات والتقارير</h2>
+                    <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-6 rounded-xl">
+                        <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">تحليل الأداء السنوي</h3>
+                        <div class="h-96"><canvas id="performanceChart"></canvas></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-6 rounded-xl">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">مقارنة شهرية</h3>
+                            <div id="monthly-comparison" class="space-y-4"></div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-6 rounded-xl">
+                            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">أداء المناديب (آخر 30 يوم)</h3>
+                            <div id="reps-performance" class="space-y-3"></div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <div id="detail-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-70 transition-opacity duration-200 opacity-0">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div id="detail-modal-content" class="relative bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-2xl p-6 sm:p-8 m-4 max-w-3xl w-full transform transition-all duration-200 scale-95">
+                <div id="detail-modal-header" class="flex justify-between items-center mb-4 pb-4 border-b border-gray-200 dark:border-slate-700">
+                    <div>
+                        <h3 class="text-2xl font-extrabold text-gray-900 dark:text-white" id="detail-modal-title"></h3>
+                        <p class="text-sm text-gray-500 dark:text-slate-400 mt-1" id="detail-modal-date"></p>
+                    </div>
+                    <button id="close-detail-modal-btn" class="text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors p-1 rounded-full"><i data-feather="x" class="w-7 h-7"></i></button>
+                </div>
+
+                <div id="detail-modal-info" class="mb-6"></div>
+                <div id="detail-modal-body" class="max-h-[55vh] overflow-y-auto custom-scrollbar pr-2"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="sidebar-overlay" class="hidden md:hidden fixed inset-0 bg-black/50 z-40"></div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, query, getDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const firebaseConfig = { apiKey: "AIzaSyBZ41NK4xWlrCjah1O9XP-1jp2bkR8nNuc", authDomain: "arabia-orders.firebaseapp.com", projectId: "arabia-orders", storageBucket: "arabia-orders.appspot.com", messagingSenderId: "1098475426096", appId: "1:1098475426096:web:25bc7f0afc82d247c3b8f5" };
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        const ui = {
+            sidebar: document.getElementById('sidebar'),
+            sidebarOverlay: document.getElementById('sidebar-overlay'),
+            menuToggle: document.getElementById('menu-toggle'),
+            navLinks: document.querySelectorAll('.sidebar-link'),
+            contentSections: document.querySelectorAll('.content-section'),
+            statsContainer: document.getElementById('stats-container'),
+            
+            currentOrdersTbody: document.getElementById('current-orders-tbody'),
+            noCurrentOrdersMsg: document.getElementById('no-current-orders-message'),
+            currentSearchInput: document.getElementById('current-search-input'),
+
+            completedOrdersTbody: document.getElementById('completed-orders-tbody'),
+            noCompletedOrdersMsg: document.getElementById('no-completed-orders-message'),
+            completedSearchInput: document.getElementById('completed-search-input'),
+            
+            monthlyComparison: document.getElementById('monthly-comparison'),
+            repsPerformance: document.getElementById('reps-performance'),
+            modal: {
+                container: document.getElementById('detail-modal'),
+                content: document.getElementById('detail-modal-content'),
+                header: document.getElementById('detail-modal-header'),
+                closeBtn: document.getElementById('close-detail-modal-btn'),
+                title: document.getElementById('detail-modal-title'),
+                date: document.getElementById('detail-modal-date'),
+                info: document.getElementById('detail-modal-info'),
+                body: document.getElementById('detail-modal-body')
+            },
+            // ✨ NEW: Theme toggle UI elements
+            themeToggle: {
+                btn: document.getElementById('theme-toggle-btn'),
+                sunIcon: document.getElementById('theme-icon-sun'),
+                moonIcon: document.getElementById('theme-icon-moon')
+            }
+        };
+
+        let allOrders = [];
+        let currentOrders = [];
+        let completedOrders = [];
+        let chartInstance = null;
+        
+        // --- ✨ NEW: THEME TOGGLE LOGIC ✨ ---
+        const updateThemeIcons = (isDark) => {
+            ui.themeToggle.sunIcon.classList.toggle('hidden', !isDark);
+            ui.themeToggle.moonIcon.classList.toggle('hidden', isDark);
+        };
+
+        const toggleTheme = () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcons(isDark);
+            if (chartInstance) renderPerformanceChart();
+        };
+
+        const initializeTheme = () => {
+            const savedTheme = localStorage.getItem('theme');
+            const isDark = savedTheme ? savedTheme === 'dark' : true; // Default to dark
+            if (!isDark) {
+                document.documentElement.classList.remove('dark');
+            }
+            updateThemeIcons(isDark);
+        };
+        
+        initializeTheme();
+        ui.themeToggle.btn.addEventListener('click', toggleTheme);
+        // --- END THEME TOGGLE LOGIC ---
+
+        const toJSDate = (d) => d?.toDate ? d.toDate() : d;
+        const ORDER_TYPE_COLORS = {
+            flexo: { border: 'border-sky-400', bg: 'bg-sky-400', text: 'text-sky-400' },
+            offset: { border: 'border-violet-400', bg: 'bg-violet-400', text: 'text-violet-400' },
+            sada: { border: 'border-slate-500', bg: 'bg-slate-500', text: 'text-slate-500' }
+        };
+
+        function createOrderTableRow(order) {
+            const progress = Math.round(((order.stages || []).filter(s => ['completed', 'skipped'].includes(s.status)).length / (order.stages || []).length) * 100) || 0;
+            const colors = ORDER_TYPE_COLORS[order.orderType] || ORDER_TYPE_COLORS.sada;
+            
+            let status;
+            if (order.status === 'stopped') status = `<span class="px-2 py-1 text-xs font-bold rounded-md bg-red-500/20 text-red-400">متوقف</span>`;
+            else if (order.status === 'completed') status = `<span class="px-2 py-1 text-xs font-bold rounded-md bg-green-500/20 text-green-400">مكتمل</span>`;
+            else status = `
+                <div class="flex items-center gap-2">
+                    <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5"><div class="${colors.bg} h-1.5 rounded-full" style="width: ${progress}%"></div></div>
+                    <span class="text-xs font-semibold ${colors.text}">${progress}%</span>
+                </div>`;
+
+            return `
+                <tr data-order-id="${order.id}" class="order-row border-b border-gray-200 dark:border-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700/40 cursor-pointer transition-colors duration-150">
+                    <td class="p-4"><span class="font-bold text-cyan-500 dark:text-cyan-400 border-r-4 ${colors.border} pr-2">#${order.orderCode || ''}</span></td>
+                    <td class="p-4">
+                        <div class="font-semibold text-gray-900 dark:text-white">${order.productName}</div>
+                        <div class="text-xs text-gray-500 dark:text-slate-400">${order.customerName}</div>
+                    </td>
+                    <td class="p-4 text-gray-600 dark:text-slate-300 hidden lg:table-cell">${order.repName || '-'}</td>
+                    <td class="p-4 text-gray-600 dark:text-slate-300 hidden sm:table-cell">${order.createdAt ? toJSDate(order.createdAt).toLocaleDateString('ar-EG') : '-'}</td>
+                    <td class="p-4 min-w-[100px]">${status}</td>
+                    </tr>
+            `;
+        }
+        
+        function renderCurrentOrdersTable() {
+            const term = ui.currentSearchInput.value.toLowerCase();
+            const filteredOrders = currentOrders.filter(o => !term || ['orderCode', 'customerName', 'productName', 'repName'].some(k => o[k]?.toString().toLowerCase().includes(term)));
+            
+            ui.noCurrentOrdersMsg.classList.toggle('hidden', filteredOrders.length > 0);
+            filteredOrders.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+            ui.currentOrdersTbody.innerHTML = filteredOrders.map(createOrderTableRow).join('');
+        }
+
+        function renderCompletedOrdersTable() {
+            const term = ui.completedSearchInput.value.toLowerCase();
+            const filteredOrders = completedOrders.filter(o => !term || ['orderCode', 'customerName', 'productName', 'repName'].some(k => o[k]?.toString().toLowerCase().includes(term)));
+            
+            ui.noCompletedOrdersMsg.classList.toggle('hidden', filteredOrders.length > 0);
+            filteredOrders.sort((a, b) => (b.completedAt?.toMillis() || b.createdAt?.toMillis() || 0) - (a.completedAt?.toMillis() || a.createdAt?.toMillis() || 0));
+            ui.completedOrdersTbody.innerHTML = filteredOrders.map(createOrderTableRow).join('');
+        }
+        
+        function renderOverviewStats() {
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const ordersThisMonth = allOrders.filter(o => toJSDate(o.createdAt) >= startOfMonth);
+
+            const repCounts = ordersThisMonth.reduce((acc, order) => {
+                if(order.repName) acc[order.repName] = (acc[order.repName] || 0) + 1;
+                return acc;
+            }, {});
+            const topRep = Object.entries(repCounts).sort((a,b) => b[1] - a[1])[0];
+            let topRepHtml = `<p class="text-gray-500 dark:text-slate-400 font-bold">مندوب الشهر</p><p class="text-4xl font-extrabold text-gray-900 dark:text-white mt-2">-</p>`;
+            if (topRep) {
+                 topRepHtml = `<p class="text-gray-500 dark:text-slate-400 font-bold">مندوب الشهر</p><p class="text-2xl lg:text-3xl font-extrabold text-gray-900 dark:text-white mt-2 truncate">${topRep[0]}</p><p class="text-xs text-cyan-500 dark:text-cyan-400 font-semibold">${topRep[1]} طلبات</p>`;
+            }
+
+            ui.statsContainer.innerHTML = `
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700"><p class="text-gray-500 dark:text-slate-400 font-bold">الطلبات الحالية</p><p class="text-4xl font-extrabold text-gray-900 dark:text-white mt-2">${currentOrders.length}</p></div>
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700"><p class="text-gray-500 dark:text-slate-400 font-bold">اكتمل هذا الشهر</p><p class="text-4xl font-extrabold text-gray-900 dark:text-white mt-2">${allOrders.filter(o => o.status === 'completed' && toJSDate(o.completedAt) >= startOfMonth).length}</p></div>
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700"><p class="text-gray-500 dark:text-slate-400 font-bold">إجمالي المكتمل</p><p class="text-4xl font-extrabold text-gray-900 dark:text-white mt-2">${completedOrders.length}</p></div>
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700">${topRepHtml}</div>
+            `;
+        }
+
+        function renderAdvancedStats() {
+            const now = new Date();
+            const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+            const thirtyDaysAgo = new Date(new Date().setDate(now.getDate() - 30));
+
+            const createdThis = allOrders.filter(o => toJSDate(o.createdAt) >= startOfThisMonth).length;
+            const createdLast = allOrders.filter(o => toJSDate(o.createdAt) >= startOfLastMonth && toJSDate(o.createdAt) <= endOfLastMonth).length;
+            const completedThis = completedOrders.filter(o => toJSDate(o.completedAt) >= startOfThisMonth).length;
+            const completedLast = completedOrders.filter(o => toJSDate(o.completedAt) >= startOfLastMonth && toJSDate(o.completedAt) <= endOfLastMonth).length;
+
+            ui.monthlyComparison.innerHTML = `
+                <div class="flex justify-between items-center bg-gray-100 dark:bg-slate-700/50 p-3 rounded-lg"><p class="font-semibold text-gray-600 dark:text-slate-300">طلبات جديدة هذا الشهر</p><p class="font-bold text-lg text-gray-900 dark:text-white">${createdThis} <span class="text-xs text-gray-500 dark:text-slate-400">(مقابل ${createdLast})</span></p></div>
+                <div class="flex justify-between items-center bg-gray-100 dark:bg-slate-700/50 p-3 rounded-lg"><p class="font-semibold text-gray-600 dark:text-slate-300">طلبات مكتملة هذا الشهر</p><p class="font-bold text-lg text-gray-900 dark:text-white">${completedThis} <span class="text-xs text-gray-500 dark:text-slate-400">(مقابل ${completedLast})</span></p></div>
+            `;
+
+            const repsData = allOrders.filter(o => toJSDate(o.createdAt) >= thirtyDaysAgo).reduce((acc, order) => {
+                if(!order.repName) return acc;
+                if(!acc[order.repName]) acc[order.repName] = { total: 0, completed: 0 };
+                acc[order.repName].total++;
+                if(order.status === 'completed') acc[order.repName].completed++;
+                return acc;
+            }, {});
+
+            ui.repsPerformance.innerHTML = Object.entries(repsData).sort((a, b) => b[1].total - a[1].total).map(([name, data]) => {
+                const completionRate = data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
+                return `<div class="bg-gray-100 dark:bg-slate-700/50 p-3 rounded-lg">
+                            <div class="flex justify-between items-center mb-2">
+                                <p class="font-bold text-gray-900 dark:text-white">${name}</p>
+                                <p class="text-sm text-gray-600 dark:text-slate-300">${data.completed} / ${data.total} طلب</p>
+                            </div>
+                            <div class="w-full bg-gray-300 dark:bg-slate-600 rounded-full h-2"><div class="bg-cyan-500 h-2 rounded-full" style="width: ${completionRate}%"></div></div>
+                        </div>`;
+            }).join('') || `<p class="text-gray-500 dark:text-slate-400 text-center">لا توجد بيانات كافية.</p>`;
+        }
+        
+        function renderTimeline(order) {
+            const colors = ORDER_TYPE_COLORS[order.orderType] || ORDER_TYPE_COLORS.sada;
+            ui.modal.header.className = `flex justify-between items-center mb-4 pb-4 border-b border-gray-200 dark:border-slate-700 ${colors.border}`;
+            
+            ui.modal.body.innerHTML = '';
+            if (order.status === 'stopped') {
+                ui.modal.body.innerHTML = `<div class="bg-red-500/10 border-r-4 border-red-500 text-red-400 p-4 rounded-md mb-6"><h4 class="font-bold">طلب متوقف</h4><p class="text-sm mt-1">${order.stopReason}</p></div>`;
+            }
+            
+            let inProgressFound = false;
+            const stagesCount = order.stages.length;
+
+            order.stages.forEach((stage, index) => {
+                let icon, color, animationClass = '', statusText;
+                
+                if (stage.status === 'completed') {
+                    icon = 'check-circle'; color = 'bg-green-500'; statusText = `اكتمل: ${toJSDate(stage.endDate).toLocaleDateString('ar-EG')}`;
+                } else if (stage.status === 'skipped') {
+                    icon = 'alert-triangle'; color = 'bg-amber-500'; statusText = 'تم التجاوز';
+                } else if (!inProgressFound) {
+                    icon = 'play-circle'; color = 'bg-blue-500'; animationClass = 'animate-pulse-blue'; statusText = 'قيد التنفيذ الآن'; inProgressFound = true;
+                } else {
+                    icon = 'clock'; color = 'bg-gray-400 dark:bg-slate-600'; statusText = 'في الانتظار';
+                }
+
+                const notesHtml = (stage.notes && stage.notes.length > 0) 
+                    ? `<div class="mt-3 space-y-2 border-t border-gray-200 dark:border-slate-700 pt-3">${stage.notes.slice().reverse().map(note => `<div class="bg-gray-100 dark:bg-slate-700/50 p-3 rounded-md text-sm"><p class="text-gray-700 dark:text-slate-300">${note.text}</p><p class="text-xs text-gray-500 dark:text-slate-400 mt-1 text-left">${note.by.split('@')[0]} - ${toJSDate(note.date).toLocaleString('ar-EG')}</p></div>`).join('')}</div>` 
+                    : '';
+                
+                const connectorLine = (index < stagesCount - 1) 
+                    ? `<div class="flex-grow w-0.5 bg-gray-300 dark:bg-slate-700 -mt-1"></div>` 
+                    : '';
+
+                ui.modal.body.innerHTML += `
+                    <div class="flex gap-4">
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 rounded-full ${color} text-white flex items-center justify-center flex-shrink-0 z-10 ${animationClass} shadow-lg">
+                                <i data-feather="${icon}" class="w-6 h-6"></i>
+                            </div>
+                            ${connectorLine}
+                        </div>
+                        <div class="flex-1 pb-8">
+                            <h4 class="font-bold text-lg text-gray-900 dark:text-white">${stage.name}</h4>
+                            <p class="text-sm text-gray-500 dark:text-slate-400">${statusText}</p>
+                            ${notesHtml}
+                        </div>
+                    </div>`;
+            });
+            feather.replace();
+        }
+
+        function renderPerformanceChart() {
+            // ✨ NEW: Dynamic chart colors based on theme
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+            const tickColor = isDarkMode ? '#94a3b8' : '#6b7280';
+            const legendColor = isDarkMode ? '#cbd5e1' : '#374151';
+            const barColor2 = isDarkMode ? '#64748b' : '#d1d5db';
+
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const monthlyData = { created: Array(12).fill(0), completed: Array(12).fill(0) };
+            allOrders.forEach(o => { const created = toJSDate(o.createdAt); if (created) monthlyData.created[created.getMonth()]++; const completed = toJSDate(o.completedAt); if (completed) monthlyData.completed[completed.getMonth()]++; });
+            if (chartInstance) chartInstance.destroy();
+            chartInstance = new Chart(ctx, { type: 'bar', data: { labels: ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'], datasets: [ { label: 'جديد', data: monthlyData.created, backgroundColor: '#22d3ee' }, { label: 'مكتمل', data: monthlyData.completed, backgroundColor: barColor2 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: tickColor }, grid: { color: gridColor } }, x: { ticks: { color: tickColor }, grid: { display: false } } }, plugins: { legend: { labels: { color: legendColor } } } } });
+        }
+        
+        // --- EVENT LISTENERS & LOGIC ---
+        function switchContent(targetId) {
+            ui.contentSections.forEach(s => s.classList.toggle('hidden', s.id !== targetId));
+            ui.navLinks.forEach(l => l.classList.toggle('sidebar-active', l.hash === `#${targetId}`));
+            if (window.innerWidth < 768) { closeSidebar(); }
+        }
+        const openSidebar = () => { ui.sidebar.classList.remove('hidden'); setTimeout(() => {ui.sidebar.classList.remove('translate-x-full'); ui.sidebarOverlay.classList.remove('hidden');}, 10); };
+        const closeSidebar = () => { ui.sidebar.classList.add('translate-x-full'); ui.sidebarOverlay.classList.add('hidden'); setTimeout(() => ui.sidebar.classList.add('hidden'), 300); };
+
+        ui.navLinks.forEach(link => link.addEventListener('click', (e) => { e.preventDefault(); switchContent(e.currentTarget.hash.substring(1)); }));
+        ui.currentSearchInput.addEventListener('input', renderCurrentOrdersTable);
+        ui.completedSearchInput.addEventListener('input', renderCompletedOrdersTable);
+        
+        ui.menuToggle.addEventListener('click', openSidebar);
+        ui.sidebarOverlay.addEventListener('click', closeSidebar);
+        
+        const openModal = () => { ui.modal.container.classList.remove('hidden'); setTimeout(() => { ui.modal.container.classList.remove('opacity-0'); ui.modal.content.classList.remove('scale-95'); }, 10); };
+        const closeModal = () => { ui.modal.container.classList.add('opacity-0'); ui.modal.content.classList.add('scale-95'); setTimeout(() => { ui.modal.container.classList.add('hidden'); }, 200); };
+        
+        document.addEventListener('click', async e => {
+            const row = e.target.closest('.order-row');
+            if (row) {
+                const orderId = row.dataset.orderId;
+                const orderDoc = await getDoc(doc(db, "orders", orderId));
+                if (orderDoc.exists()) {
+                    const order = orderDoc.data();
+                    ui.modal.title.textContent = `تفاصيل الطلب #${order.orderCode}`;
+                    ui.modal.date.textContent = `تاريخ الإنشاء: ${toJSDate(order.createdAt).toLocaleDateString('ar-EG')}`;
+                    
+                    ui.modal.info.innerHTML = `
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-slate-400 font-semibold">المنتج</p>
+                                <p class="font-bold text-gray-900 dark:text-white truncate">${order.productName || '-'}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-slate-400 font-semibold">العميل</p>
+                                <p class="font-bold text-gray-900 dark:text-white truncate">${order.customerName || '-'}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 dark:text-slate-400 font-semibold">المندوب</p>
+                                <p class="font-bold text-gray-900 dark:text-white truncate">${order.repName || '-'}</p>
+                            </div>
+                        </div>
+                    `;
+
+                    renderTimeline(order);
+                    openModal();
+                }
+            }
+        });
+        ui.modal.closeBtn.addEventListener('click', closeModal);
+        ui.modal.container.addEventListener('click', e => { if (e.target === ui.modal.container) closeModal(); });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            onSnapshot(query(collection(db, "orders")), (snapshot) => {
+                allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                currentOrders = allOrders.filter(o => o.status !== 'completed');
+                completedOrders = allOrders.filter(o => o.status === 'completed');
+
+                renderCurrentOrdersTable();
+                renderCompletedOrdersTable();
+                renderOverviewStats();
+                renderAdvancedStats();
+                renderPerformanceChart();
+            }, console.error);
+            feather.replace();
+        });
+    </script>
+</body>
+</html>

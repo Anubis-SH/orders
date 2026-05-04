@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | لوحة الإدارة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #0f172a; /* slate-900 */
+        }
+    </style>
+</head>
+<body class="text-slate-200 bg-slate-900">
+
+    <div id="login-section" class="flex items-center justify-center min-h-screen p-4">
+        <div class="w-full max-w-md">
+            <div class="flex items-center justify-center gap-3 mb-8">
+                <div class="bg-cyan-500/10 p-2 rounded-lg"><i data-feather="box" class="w-8 h-8 text-cyan-400"></i></div>
+                <h1 class="text-2xl font-extrabold text-white">لوحة تحكم الإدارة</h1>
+            </div>
+            <div class="bg-slate-800 border border-slate-700 rounded-xl p-8 shadow-2xl">
+                <h2 class="text-2xl font-bold text-white text-center mb-6">تسجيل الدخول</h2>
+                <form id="login-form">
+                    <div class="mb-4">
+                        <label for="email" class="block mb-2 text-sm font-medium text-slate-300">البريد الإلكتروني</label>
+                        <input type="email" id="email" class="w-full px-4 py-2 text-base bg-slate-700 border-2 border-slate-600 rounded-lg focus:ring-cyan-500 focus:border-cyan-500 transition" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="password" class="block mb-2 text-sm font-medium text-slate-300">كلمة المرور</label>
+                        <input type="password" id="password" class="w-full px-4 py-2 text-base bg-slate-700 border-2 border-slate-600 rounded-lg focus:ring-cyan-500 focus:border-cyan-500 transition" required>
+                    </div>
+                    <button type="submit" id="login-btn" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center">
+                        <span id="login-btn-text">تسجيل الدخول</span>
+                        <div id="login-spinner" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    </button>
+                    <p id="login-error" class="text-red-400 text-center text-sm mt-4 h-4"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="admin-panel-section" class="hidden">
+        <header class="sticky top-0 bg-slate-800/80 backdrop-blur-sm z-40 p-4 flex justify-between items-center border-b border-slate-700">
+             <div class="flex items-center gap-3">
+                <div class="bg-cyan-500/10 p-2 rounded-lg"><i data-feather="box" class="w-7 h-7 text-cyan-400"></i></div>
+                <h1 class="text-lg font-extrabold text-white">إدارة الطلبات</h1>
+            </div>
+            <button id="logout-btn" class="bg-red-500/20 hover:bg-red-500/40 text-red-400 font-bold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center gap-2 text-sm">
+                <i data-feather="log-out" class="w-4 h-4"></i>
+                <span>تسجيل الخروج</span>
+            </button>
+        </header>
+        
+        <main class="p-4 sm:p-8">
+            <div class="mb-6">
+                <div class="relative w-full md:w-96">
+                    <input type="text" id="search-input" placeholder="ابحث بكود الطلب أو اسم العميل..." class="w-full pl-10 pr-4 py-2 text-base bg-slate-800 border-2 border-slate-700 rounded-lg focus:ring-cyan-500 focus:border-cyan-500 transition">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-feather="search" class="w-5 h-5 text-slate-400"></i></div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800 rounded-xl overflow-hidden border border-slate-700">
+                <div class="overflow-x-auto">
+                     <table class="w-full text-sm text-right">
+                        <thead class="bg-slate-700/50 text-slate-400 uppercase text-xs">
+                            <tr>
+                                <th class="p-4">كود الطلب</th>
+                                <th class="p-4">المنتج والعميل</th>
+                                <th class="p-4 hidden sm:table-cell">تاريخ الإنشاء</th>
+                                <th class="p-4 text-center">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orders-tbody"></tbody>
+                    </table>
+                    <div id="no-orders-message" class="hidden text-center py-16"><i data-feather="folder" class="w-12 h-12 mx-auto text-slate-500"></i><p class="mt-4 text-lg font-bold text-slate-500">لا توجد طلبات لعرضها.</p></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="edit-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-70">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="relative bg-slate-800 border border-slate-700 rounded-xl shadow-2xl p-6 sm:p-8 m-4 max-w-4xl w-full">
+                <h3 class="text-2xl font-extrabold text-white mb-6">تعديل بيانات الطلب <span id="edit-modal-order-code" class="text-cyan-400"></span></h3>
+                <form id="edit-form" class="max-h-[80vh] overflow-y-auto pr-4">
+                    <input type="hidden" id="edit-order-id">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 border-b border-slate-700 pb-6 mb-6">
+                        <div>
+                            <label for="edit-orderCode" class="block mb-2 text-sm font-medium text-slate-300">كود الطلب</label>
+                            <input type="text" id="edit-orderCode" class="w-full px-4 py-2 bg-slate-700 border-2 border-slate-600 rounded-lg">
+                        </div>
+                         <div>
+                            <label for="edit-productName" class="block mb-2 text-sm font-medium text-slate-300">اسم المنتج</label>
+                            <input type="text" id="edit-productName" class="w-full px-4 py-2 bg-slate-700 border-2 border-slate-600 rounded-lg">
+                        </div>
+                        <div>
+                            <label for="edit-customerName" class="block mb-2 text-sm font-medium text-slate-300">اسم العميل</label>
+                            <input type="text" id="edit-customerName" class="w-full px-4 py-2 bg-slate-700 border-2 border-slate-600 rounded-lg">
+                        </div>
+                        <div>
+                            <label for="edit-repName" class="block mb-2 text-sm font-medium text-slate-300">اسم المندوب</label>
+                            <input type="text" id="edit-repName" class="w-full px-4 py-2 bg-slate-700 border-2 border-slate-600 rounded-lg">
+                        </div>
+                        <div>
+                            <label for="edit-status" class="block mb-2 text-sm font-medium text-slate-300">حالة الطلب</label>
+                            <select id="edit-status" class="w-full px-4 py-2 bg-slate-700 border-2 border-slate-600 rounded-lg">
+                                <option value="active">نشط</option>
+                                <option value="completed">مكتمل</option>
+                                <option value="stopped">متوقف</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="edit-orderType" class="block mb-2 text-sm font-medium text-slate-300">نوع الطلب</label>
+                            <select id="edit-orderType" class="w-full px-4 py-2 bg-slate-700 border-2 border-slate-600 rounded-lg">
+                                <option value="flexo">فلكسو</option>
+                                <option value="offset">أوفست</option>
+                                <option value="sada">سادة</option>
+                            </select>
+                        </div>
+                        <div id="stop-reason-wrapper" class="md:col-span-2 lg:col-span-3 hidden">
+                            <label for="edit-stopReason" class="block mb-2 text-sm font-medium text-slate-300">سبب الإيقاف</label>
+                            <textarea id="edit-stopReason" rows="2" class="w-full px-4 py-2 bg-slate-700 border-2 border-slate-600 rounded-lg"></textarea>
+                        </div>
+                        <div class="text-sm">
+                            <p class="text-slate-400">تاريخ الإنشاء:</p>
+                            <p id="info-createdAt" class="font-bold text-white"></p>
+                        </div>
+                         <div class="text-sm">
+                            <p class="text-slate-400">تاريخ الإكتمال:</p>
+                            <p id="info-completedAt" class="font-bold text-white"></p>
+                        </div>
+                    </div>
+
+                    <h4 class="text-xl font-bold text-white mb-4">تعديل مراحل الطلب</h4>
+                    <div id="edit-stages-container" class="space-y-4">
+                        </div>
+
+                    <div class="flex items-center justify-end gap-4 mt-8">
+                        <button type="button" id="cancel-edit-btn" class="bg-slate-600 hover:bg-slate-700 text-white font-bold py-2 px-6 rounded-lg transition">إلغاء</button>
+                        <button type="submit" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-6 rounded-lg transition">حفظ التعديلات</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, deleteDoc, updateDoc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyBZ41NK4xWlrCjah1O9XP-1jp2bkR8nNuc", authDomain: "arabia-orders.firebaseapp.com", projectId: "arabia-orders", storageBucket: "arabia-orders.appspot.com", messagingSenderId: "1098475426096", appId: "1:1098475426096:web:25bc7f0afc82d247c3b8f5" };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- UI Elements ---
+        const loginSection = document.getElementById('login-section');
+        const adminPanelSection = document.getElementById('admin-panel-section');
+        const loginForm = document.getElementById('login-form');
+        const loginBtn = document.getElementById('login-btn');
+        const loginBtnText = document.getElementById('login-btn-text');
+        const loginSpinner = document.getElementById('login-spinner');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+        const ordersTbody = document.getElementById('orders-tbody');
+        const noOrdersMsg = document.getElementById('no-orders-message');
+        const searchInput = document.getElementById('search-input');
+        const editModal = document.getElementById('edit-modal');
+        const editForm = document.getElementById('edit-form');
+        const cancelEditBtn = document.getElementById('cancel-edit-btn');
+        const stopReasonWrapper = document.getElementById('stop-reason-wrapper');
+
+        let allOrders = [];
+        let unsubscribe;
+        let originalStages = [];
+
+        // --- Authentication & Data Loading ---
+        onAuthStateChanged(auth, user => {
+            if (user) {
+                console.log("Logged in User UID:", user.uid); // For debugging
+                loginSection.classList.add('hidden');
+                adminPanelSection.classList.remove('hidden');
+                listenToOrders(); 
+            } else {
+                loginSection.classList.remove('hidden');
+                adminPanelSection.classList.add('hidden');
+                if (unsubscribe) unsubscribe();
+            }
+        });
+        
+        function listenToOrders() {
+            if (unsubscribe) unsubscribe(); 
+            unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+                allOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderOrdersTable();
+            });
+        }
+        
+        function renderOrdersTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const filteredOrders = allOrders.filter(order => 
+                order.orderCode?.toString().includes(searchTerm) ||
+                order.customerName?.toLowerCase().includes(searchTerm) ||
+                order.productName?.toLowerCase().includes(searchTerm)
+            );
+            filteredOrders.sort((a, b) => parseInt(b.orderCode || 0) - parseInt(a.orderCode || 0));
+
+            noOrdersMsg.classList.toggle('hidden', filteredOrders.length > 0);
+            ordersTbody.innerHTML = filteredOrders.map(order => {
+                const createdAt = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString('ar-EG') : 'غير محدد';
+                return `
+                    <tr class="border-b border-slate-700/50">
+                        <td class="p-4"><span class="font-bold text-cyan-400">#${order.orderCode || ''}</span></td>
+                        <td class="p-4">
+                            <div class="font-semibold text-white">${order.productName}</div>
+                            <div class="text-xs text-slate-400">${order.customerName}</div>
+                        </td>
+                        <td class="p-4 text-slate-300 hidden sm:table-cell">${createdAt}</td>
+                        <td class="p-4 text-center">
+                            <div class="flex justify-center items-center gap-2">
+                                <button data-id="${order.id}" class="edit-btn bg-sky-500/20 hover:bg-sky-500/40 text-sky-400 font-bold py-2 px-4 rounded-lg transition flex items-center gap-2 text-sm">
+                                    <i data-feather="edit" class="w-4 h-4"></i><span>تعديل</span>
+                                </button>
+                                <button data-id="${order.id}" data-code="${order.orderCode}" class="delete-btn bg-red-500/20 hover:bg-red-500/40 text-red-400 font-bold py-2 px-4 rounded-lg transition flex items-center gap-2 text-sm">
+                                    <i data-feather="trash-2" class="w-4 h-4"></i><span>حذف</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+            }).join('');
+            feather.replace();
+        }
+        
+        searchInput.addEventListener('input', renderOrdersTable);
+
+        // --- Event Delegation for Delete and Edit ---
+        adminPanelSection.addEventListener('click', async (e) => {
+            // Delete logic
+            if (e.target.closest('.delete-btn')) {
+                const btn = e.target.closest('.delete-btn');
+                const orderId = btn.dataset.id;
+                const orderCode = btn.dataset.code;
+
+                if (confirm(`هل أنت متأكد من حذف الطلب #${orderCode}؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+                    try {
+                        await deleteDoc(doc(db, "orders", orderId));
+                    } catch (error) {
+                        console.error("Error removing document: ", error);
+                        alert('حدث خطأ أثناء الحذف.');
+                    }
+                }
+            }
+            
+            // Edit logic
+            if (e.target.closest('.edit-btn')) {
+                const orderId = e.target.closest('.edit-btn').dataset.id;
+                try {
+                    const orderRef = doc(db, "orders", orderId);
+                    const docSnap = await getDoc(orderRef);
+                    if (docSnap.exists()) {
+                        const order = docSnap.data();
+                        originalStages = order.stages || [];
+
+                        document.getElementById('edit-modal-order-code').textContent = `#${order.orderCode}`;
+                        document.getElementById('edit-order-id').value = orderId;
+                        document.getElementById('edit-orderCode').value = order.orderCode || '';
+                        document.getElementById('edit-productName').value = order.productName || '';
+                        document.getElementById('edit-customerName').value = order.customerName || '';
+                        document.getElementById('edit-repName').value = order.repName || '';
+                        document.getElementById('edit-status').value = order.status || 'active';
+                        document.getElementById('edit-orderType').value = order.orderType || 'sada';
+                        document.getElementById('edit-stopReason').value = order.stopReason || '';
+                        
+                        document.getElementById('info-createdAt').textContent = order.createdAt?.toDate ? order.createdAt.toDate().toLocaleString('ar-EG') : 'غير محدد';
+                        document.getElementById('info-completedAt').textContent = order.completedAt?.toDate ? order.completedAt.toDate().toLocaleString('ar-EG') : 'لم يكتمل بعد';
+
+                        const stagesContainer = document.getElementById('edit-stages-container');
+                        stagesContainer.innerHTML = originalStages.map((stage, index) => `
+                            <div class="grid grid-cols-3 gap-4 items-center bg-slate-700/50 p-3 rounded-lg">
+                                <span class="font-bold text-white col-span-2">${stage.name}</span>
+                                <select data-stage-index="${index}" class="stage-status-select w-full px-3 py-1.5 bg-slate-600 border border-slate-500 rounded-md text-sm">
+                                    <option value="pending" ${stage.status === 'pending' ? 'selected' : ''}>قيد الانتظar</option>
+                                    <option value="completed" ${stage.status === 'completed' ? 'selected' : ''}>مكتمل</option>
+                                    <option value="skipped" ${stage.status === 'skipped' ? 'selected' : ''}>تم التجاوز</option>
+                                </select>
+                            </div>
+                        `).join('');
+
+                        stopReasonWrapper.classList.toggle('hidden', order.status !== 'stopped');
+                        editModal.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error("Error fetching doc for edit:", error);
+                    alert("لا يمكن تحميل بيانات الطلب للتعديل.");
+                }
+            }
+        });
+
+        // --- Edit Modal Logic ---
+        document.getElementById('edit-status').addEventListener('change', (e) => {
+            stopReasonWrapper.classList.toggle('hidden', e.target.value !== 'stopped');
+        });
+        
+        cancelEditBtn.addEventListener('click', () => {
+            editModal.classList.add('hidden');
+        });
+
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const orderId = document.getElementById('edit-order-id').value;
+            const newStatus = document.getElementById('edit-status').value;
+
+            const updatedStages = Array.from(document.querySelectorAll('.stage-status-select')).map(select => {
+                const index = parseInt(select.dataset.stageIndex);
+                const originalStage = originalStages[index];
+                const newStageStatus = select.value;
+
+                let newEndDate = originalStage.endDate || null;
+                if (newStageStatus === 'completed' && originalStage.status !== 'completed') {
+                    newEndDate = serverTimestamp();
+                } else if (newStageStatus !== 'completed') {
+                    newEndDate = null;
+                }
+                
+                return {
+                    ...originalStage,
+                    status: newStageStatus,
+                    endDate: newEndDate,
+                };
+            });
+            
+            const updatedData = {
+                orderCode: document.getElementById('edit-orderCode').value,
+                productName: document.getElementById('edit-productName').value,
+                customerName: document.getElementById('edit-customerName').value,
+                repName: document.getElementById('edit-repName').value,
+                status: newStatus,
+                orderType: document.getElementById('edit-orderType').value,
+                stages: updatedStages,
+                completedAt: newStatus === 'completed' ? serverTimestamp() : null,
+                stopReason: newStatus === 'stopped' ? document.getElementById('edit-stopReason').value : ''
+            };
+
+            try {
+                const orderRef = doc(db, "orders", orderId);
+                await updateDoc(orderRef, updatedData);
+                editModal.classList.add('hidden');
+            } catch (error) {
+                console.error("Error updating document: ", error);
+                alert('حدث خطأ أثناء حفظ التعديلات.');
+            }
+        });
+
+        // --- Login and Logout Listeners ---
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            loginError.textContent = '';
+            loginBtn.disabled = true;
+            loginBtnText.classList.add('hidden');
+            loginSpinner.classList.remove('hidden');
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch (error) {
+                loginError.textContent = 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+            } finally {
+                loginBtn.disabled = false;
+                loginBtnText.classList.remove('hidden');
+                loginSpinner.classList.add('hidden');
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => signOut(auth));
+        
+        feather.replace();
+    </script>
+</body>
+</html>
